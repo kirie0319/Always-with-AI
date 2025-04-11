@@ -74,7 +74,7 @@ def update_user_messages(user_identifier, message_pair):
 openai_api_key = os.getenv("OPENAI_API_KEY")
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
-openai_client = OpenAI(openai_api_key)
+openai_client = OpenAI(api_key=openai_api_key)
 anthropic_client = anthropic.Anthropic(
   api_key=anthropic_api_key,
 )

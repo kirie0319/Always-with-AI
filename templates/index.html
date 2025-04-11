@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeals</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="logo">
+        <i class="fas fa-robot"></i>
+        <h1>Zeals<span>.AI</span></h1>
+      </div>
+      <p class="tagline">意思決定のサポート</p>
+    </div>
+
+    <div class="chat-messages" id="chat-box">
+      <div class="message bot">
+        <div class="avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>こんにちは！Zeals.AIです!</p>
+          <span class="timestamp">今</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <div class="input-container">
+        <input type="text" id="input" placeholder="例：東京で美味しい寿司を食べたいです..." />
+        <button id="send-btn" onclick="send()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="actions">
+        <button id="clear-btn" onclick="clearChat()" class="secondary-btn">
+          <i class="fas fa-trash-alt"></i> チャットをクリア
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/chat.js"></script>
+</body>
+
+</html>

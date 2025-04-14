@@ -78,6 +78,10 @@ def generate_summary_in_background(history_json):
     anthropic_client = anthropic.Anthropic(
       api_key=anthropic_api_key,
     )
+    user_history = load_json("user_history.json", {})
+    user_history_json = to_pretty_json(user_history)
+    summary = load_json("chatsummary.json", [])
+    summary_json = to_pretty_json(summary)
     summarizing_prompt = summarizing_prompt = f"""You are an expert conversation summarizer.
 
     Your task is to analyze and summarize a JSON-formatted chat history between a user and an AI assistant. The goal is to extract key details and provide a clear, structured summary of the conversation.
@@ -107,8 +111,11 @@ def generate_summary_in_background(history_json):
 
     Focus on clarity and usefulness. If the conversation is based on a fictional character (e.g., anime, games), preserve the tone and role-playing context in your summary.
 
-    Now, here is the chat history to summarize:
-    {history_json}
+    Now, here is the summary of this conversation:
+    {summary_json}
+
+    And also here is the conversation history with users that is last 7 rallies:
+    {user_history_json}
     """
 
     anthropic_summary = anthropic_client.messages.create(
@@ -237,7 +244,7 @@ Comparative analysis of pros and cons
 
 4. Specific Product Recommendation Phase
 
-Provide specific Resona Bank product recommendations:
+Provide specific "りそな銀行" product recommendations:
 
 Products that align with the selected strategy
 
@@ -311,7 +318,7 @@ The ultimate goal is to help financial advisors quickly develop tailored, though
     }
     update_user_messages(user_identifier, message_pair)
 
-    if len(history) % 5 == 0:
+    if len(history) % 7 == 0:
       threading.Thread(
         target=generate_summary_in_background,
         args=(history_json,)

@@ -1,0 +1,4 @@
+# prompts/general/chat.yaml
+role: user
+content: |
+  {{user_input}}

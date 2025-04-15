@@ -11,20 +11,17 @@ class AnthropicService(AIService):
     self.client = Anthropic(api_key=api_key)
     self.models = ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-3-7-sonnet-20250219"]
 
-  def generate_response(self, user_input, system_prompt="", model=None, max_tokens=1024):
+  def generate_response(self, messages, options=None):
     options = options or {}
     max_retries = options.get("max_retries", config.MAX_RETRIES)
     model = options.get("model", config.DEFAULT_ANTHROPIC_MODEL)
     max_tokens = options.get("max_tokens", config.MAX_TOKENS)
+    system_content = options.get("system", None)
 
-    system_content = None
     formatted_messages = []
 
     for msg in messages:
-      if msg["role"] == "assistant":
-        system_content = msg["content"]
-      else:
-        formatted_messages.append(msg)
+      formatted_messages.append(msg)
 
     retries = 0
     while retries < max_retries:

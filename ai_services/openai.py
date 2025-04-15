@@ -20,8 +20,7 @@ class OpenAIService(AIService):
       try:
         response = self.client.responses.create(
           model=model,
-          max_tokens=max_tokens,
-          messages=messages
+          input=messages
         )
         return {
           "cotent": response.output_text,

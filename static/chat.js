@@ -7,6 +7,21 @@ const sendButton = document.getElementById('send-btn');
 document.addEventListener('DOMContentLoaded', () => {
   inputField.focus();
 
+  // マークダウンの設定
+  marked.setOptions({
+    breaks: true, // 改行をbrタグに変換
+    gfm: true,    // GitHub Flavored Markdown を有効化
+    highlight: function (code, lang) {
+      // コードのハイライト（highlight.jsを使用している場合）
+      if (hljs && lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(code, { language: lang }).value;
+        } catch (e) { }
+      }
+      return code;
+    }
+  });
+
   // Submit on Enter key
   inputField.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -21,6 +36,11 @@ function formatTimestamp() {
   const hours = now.getHours().toString().padStart(2, '0');
   const minutes = now.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+// マークダウンをパースして安全に描画する関数
+function renderMarkdown(text) {
+  return marked.parse(text);
 }
 
 // Add message to chat
@@ -47,8 +67,23 @@ function appendMessage(role, text) {
   const contentDiv = document.createElement('div');
   contentDiv.className = 'message-content';
 
-  const messagePara = document.createElement('p');
-  messagePara.textContent = text;
+  const messagePara = document.createElement('div');
+  messagePara.className = 'markdown-content';
+
+  // ユーザーの場合はマークダウンパースせず、AIの場合はマークダウンパース
+  if (role === 'user') {
+    messagePara.textContent = text;
+  } else {
+    // マークダウンをHTMLに変換
+    messagePara.innerHTML = renderMarkdown(text);
+
+    // コードブロックがあれば、highlight.jsを適用
+    if (hljs) {
+      messagePara.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    }
+  }
 
   const timeSpan = document.createElement('span');
   timeSpan.className = 'timestamp';
@@ -156,7 +191,7 @@ async function clearChat() {
     chatBox.innerHTML = '';
 
     // Add welcome message
-    appendMessage('ai', 'こんにちは！Ninja.AIです。日本のレストランについて何でも聞いてください。おすすめの寿司屋さんや、本格的なラーメン店など、お手伝いします！');
+    appendMessage('ai', 'こんにちは！Zeals.AIです！意思決定のサポートについて、お手伝いします。');
 
   } catch (error) {
     console.error('Error clearing chat:', error);

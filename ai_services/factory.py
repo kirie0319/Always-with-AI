@@ -37,7 +37,7 @@ class MultimodalAIService:
       self.secondary = secondary_options[0]
 
 
-  def generate_response(self, provider, messages, options=None):
+  def generate_response(self, messages, options=None):
     options = options or {}
     provider = options.get("provider", self.primary)
 
@@ -66,4 +66,4 @@ class MultimodalAIService:
     return result
 
   def get_available_providers(self):
-    return lsit(self.services.keys())
+    return list(self.services.keys())

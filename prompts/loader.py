@@ -36,7 +36,7 @@ class PromptLoader:
 
         for filename in os.listdir(category_path):
           if filename.endswith(".yaml"):
-            prompt_name = os.path.splittext(filename)[0]
+            prompt_name = os.path.splitext(filename)[0]
             prompt_files.append(prompt_name)
 
         if prompt_files:

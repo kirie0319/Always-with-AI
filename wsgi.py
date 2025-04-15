@@ -192,7 +192,7 @@ def chat():
   }
   update_user_messages(user_identifier, message_pair)
 
-  if len(history) % 5 == 0:
+  if len(history) % 7 == 0:
       threading.Thread(
         target=generate_summary_in_background,
         args=(history_json,)

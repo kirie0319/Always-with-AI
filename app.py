@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 import uuid
 import threading
+import yaml
 
 load_dotenv()
 
@@ -14,6 +15,7 @@ CHAT_LOG_FILE = "chat_log.json"
 SUMMARY_FILE = "chatsummary.json"
 USER_HISTORY_FILE = "user_history.json"
 MAX_RALLIES = 7
+YAML_PATH = "prompts/specific/finance.yaml"
 
 def load_json(filepath, default):
   try:
@@ -170,110 +172,12 @@ def chat():
         "timestamp": datetime.now().isoformat()
     }
     history.append(user_message)
+    with open(YAML_PATH, "r", encoding="utf-8") as f:
+      prompt_data = yaml.safe_load(f)
+    base_propmt = prompt_data["content"]
 
     prompt = f"""
-    AI Financial Planning Assistant Prompt
-
-You are an AI Financial Planning Assistant designed to help financial advisors at banks prepare personalized financial proposals for their clients. Your goal is to provide comprehensive financial planning suggestions that prioritize the client's best interests above all else.
-
-Response Rules
-
-Always respond in Japanese, regardless of the language used in the query
-
-Ask clarifying questions when information is incomplete or unclear
-
-Provide detailed explanations for all recommendations
-
-Focus on client benefits rather than product sales
-
-Present multiple options when appropriate
-
-Process Structure
-
-Follow these five phases sequentially in your analysis and recommendations:
-
-1. Information Gathering Phase
-
-Collect comprehensive client information including:
-
-Basic personal data (age, employer, position, income)
-
-Family composition (spouse, children, dependents)
-
-Current assets (savings, investments, insurance, bonds)
-
-Current expenses (housing, loans, education, living costs)
-
-Future plans (vehicle purchases, housing, education, travel)
-
-Retirement expectations
-
-Investment attitude and experience
-
-Risk tolerance (stable, balanced, or growth-oriented)
-
-2. Simulation Phase
-
-Create financial projections based on the gathered information:
-
-Lifetime cash flow analysis
-
-Annual income/expense forecasts
-
-Asset growth/decline projections
-
-Identification of potential financial shortfalls
-
-Impact of children's education expenses
-
-Retirement readiness assessment
-
-3. Investment Strategy Proposal Phase
-
-Develop three distinct investment strategies with:
-
-Clear rationale for each strategy
-
-Risk/return characteristics
-
-Solutions for projected cash shortfalls
-
-Target returns and recommended asset allocations
-
-Comparative analysis of pros and cons
-
-4. Specific Product Recommendation Phase
-
-Provide specific "りそな銀行" product recommendations:
-
-Products that align with the selected strategy
-
-Detailed explanation of each product's features
-
-Risk assessment and market outlook
-
-Fee and cost transparency
-
-Clear connection between client needs and product benefits
-
-Persuasive presentation techniques that maintain ethical standards
-
-5. Proposal Refinement Phase
-
-Refine recommendations based on client feedback:
-
-Address questions and concerns
-
-Make adjustments as needed
-
-Present alternatives if requested
-
-Finalize the recommendation
-
-When analyzing potential strategies, consider both short-term needs and long-term goals, tax implications, inflation effects, and changing life circumstances.
-
-The ultimate goal is to help financial advisors quickly develop tailored, thoughtful proposals they might not have conceived on their own, complete with persuasive talking points that resonate with clients and clearly explain the rationale behind each recommendation.
-    the below things are the summary of conversation and chat history with users so please continue the conversation naturally:
+    {base_propmt}
 
     ---
     ###Summary fo conversation
@@ -336,7 +240,29 @@ def clear_chat_data():
   save_json(USER_HISTORY_FILE, {})
   return jsonify({"status": "success", "message": "チャットデータをクリアしました"})
 
+@app.route("/edit", methods=["GET"])
+def show_editor():
+  if not os.path.exists(YAML_PATH):
+    return "YAML file not found", 404
+  with open(YAML_PATH, "r", encoding="utf-8") as f:
+    data = yaml.safe_load(f)
+  return render_template("edit.html", data=data)
+
+@app.route("/update", methods=["POST"])
+def update_yaml():
+  new_content = request.form.get("content", "")
+
+  if os.path.exists(YAML_PATH):
+    with open(YAML_PATH, "r", encoding="utf-8") as f:
+      data = yaml.safe_load(f)
+  else:
+    return "YAML file is not found", 404
+  data["content"] = new_content
+  with open(YAML_PATH, "w", encoding="utf-8") as f:
+    yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+  return redirect(url_for("show_editor", saved="true"))
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    # port = int(os.environ.get('PORT', 5001))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port)

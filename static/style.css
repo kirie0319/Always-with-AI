@@ -441,3 +441,26 @@ button:active {
     padding: 12px;
   }
 }
+
+.navigation-button-container {
+  text-align: center;
+  margin: 12px 0;
+}
+
+.nav-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--success-color);
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.nav-btn:hover {
+  background-color: #28c96e;
+  /* hover時ちょっと濃く */
+  transform: translateY(-2px);
+}

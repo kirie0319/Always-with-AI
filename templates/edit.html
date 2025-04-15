@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YAML Content Editor</title>
+  <link rel="stylesheet" href="/static/edit_style.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>YAML コンテンツエディタ</h1>
+    </header>
+
+    {% if request.args.get("saved") %}
+    <div class="notification">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      保存が完了しました！
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <form action="{{ url_for('update_yaml') }}" method="POST">
+        <div class="yaml-info">
+          <p><strong>name:</strong> {{ data.name }}</p>
+          <p><strong>description:</strong> {{ data.description }}</p>
+        </div>
+
+        <div class="form-group">
+          <label for="content">content:</label>
+          <textarea name="content" spellcheck="false">{{ data.content }}</textarea>
+        </div>
+
+        <button type="submit">
+          <span class="button-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+          </span>
+          保存する
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>

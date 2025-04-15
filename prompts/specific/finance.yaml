@@ -3,7 +3,7 @@ name: Financial Planning Assistant
 description: Financial planning assistant for bank advisors
 version: 1.0
 author: System
-date_created: {{date}}
+date_created: "{{date}}"
 content: |
   AI Financial Planning Assistant Prompt
 
@@ -106,11 +106,3 @@ content: |
   When analyzing potential strategies, consider both short-term needs and long-term goals, tax implications, inflation effects, and changing life circumstances.
 
   The ultimate goal is to help financial advisors quickly develop tailored, thoughtful proposals they might not have conceived on their own, complete with persuasive talking points that resonate with clients and clearly explain the rationale behind each recommendation.
-
-  The below things are the summary of conversation and chat history with users so please continue the conversation naturally:
-
-  ---
-  ### Summary of conversation
-  {{summary}}
-  ### Recent conversation with users
-  {{history}}

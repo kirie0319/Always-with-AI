@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask_migrate import Migrate 
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import anthropic
 from datetime import datetime
+from models import db, Prompt 
 import json
 import uuid
 import threading
@@ -144,6 +146,11 @@ anthropic_client = anthropic.Anthropic(
 
 
 app = Flask(__name__, static_url_path='/static')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+db.init_app(app)
+migrate = Migrate(app, db)
 
 @app.route("/")
 def index():
@@ -172,12 +179,16 @@ def chat():
         "timestamp": datetime.now().isoformat()
     }
     history.append(user_message)
-    with open(YAML_PATH, "r", encoding="utf-8") as f:
-      prompt_data = yaml.safe_load(f)
-    base_propmt = prompt_data["content"]
+    selected_prompt_id = session.get("selected_prompt_id")
+    print(selected_prompt_id)
+    base_prompt = "you are helpful AI assistant"
+    if selected_prompt_id:
+      prompt_obj = Prompt.query.filter_by(id=selected_prompt_id).first()
+      print(prompt_obj.content)
+      base_prompt = prompt_obj.content
 
     prompt = f"""
-    {base_propmt}
+    {base_prompt}
 
     ---
     ###Summary fo conversation
@@ -185,15 +196,8 @@ def chat():
     ###Recent conversation with users
     {user_history_json}
     """
+    print(prompt)
 
-    
-
-    # openai_response = openai_client.responses.create(
-    #     model="gpt-4o",
-    #     input=user_input,
-    #     instructions=prompt,
-    #     store=False
-    # )
 
     anthropic_message = anthropic_client.messages.create(
       model="claude-3-7-sonnet-20250219",
@@ -240,27 +244,101 @@ def clear_chat_data():
   save_json(USER_HISTORY_FILE, {})
   return jsonify({"status": "success", "message": "チャットデータをクリアしました"})
 
-@app.route("/edit", methods=["GET"])
-def show_editor():
-  if not os.path.exists(YAML_PATH):
-    return "YAML file not found", 404
-  with open(YAML_PATH, "r", encoding="utf-8") as f:
-    data = yaml.safe_load(f)
-  return render_template("edit.html", data=data)
+@app.route("/prompt", methods=["GET"])
+def get_prompts():
+  prompts = Prompt.query.all()
+  return render_template("list.html", data=prompts)
 
-@app.route("/update", methods=["POST"])
-def update_yaml():
-  new_content = request.form.get("content", "")
+@app.route("/prompt/<int:prompt_id>", methods=["GET"])
+def get_prompt(prompt_id):
+  prompt = Prompt.query.filter_by(id=prompt_id).first()
 
-  if os.path.exists(YAML_PATH):
-    with open(YAML_PATH, "r", encoding="utf-8") as f:
-      data = yaml.safe_load(f)
-  else:
-    return "YAML file is not found", 404
-  data["content"] = new_content
-  with open(YAML_PATH, "w", encoding="utf-8") as f:
-    yaml.dump(data, f, allow_unicode=True, sort_keys=False)
-  return redirect(url_for("show_editor", saved="true"))
+  if not prompt:
+    return render_template("error.html", message="プロンプトが見つかりません"), 404
+
+  return render_template("edit.html", data=prompt)
+
+@app.route("/prompt/<int:prompt_id>", methods=["PATCH"])
+def update_prompt(prompt_id):
+  prompt = Prompt.query.filter_by(id=prompt_id).first()
+  if not prompt:
+    return render_template("error.html", message="プロンプトが見つかりません"), 404
+  p_data = request.get_json()
+  if "content" in p_data:
+    prompt.content = p_data["content"]
+
+  db.session.commit()
+  return render_template("edit.html", data=prompt)
+
+@app.route("/prompt/<int:prompt_id>", methods=["DELETE"])
+def delete_task(prompt_id):
+  prompt = Prompt.query.filter_by(id=prompt_id).first()
+
+  if not prompt:
+    return render_template("error.html", message="プロンプトが見つかりません"), 404
+  db.session.delete(prompt)
+  db.session.commit()
+  return render_template("edit.html", data=prompt)
+
+@app.route("/prompts/create", methods=["POST"])
+def create_prompt():
+  p_data = request.get_json()
+
+  if not p_data or "content" not in p_data or not isinstance(p_data["content"], str):
+    return render_template("error.html", message="プロンプトが見つかりません"), 404
+
+  new_prompt = Prompt(
+    name=p_data["name"],
+    content=p_data["content"],
+    description=p_data["description"]    
+  )
+  db.session.add(new_prompt)
+  db.session.commit()
+
+  return render_template("edit.html", data=new_prompt)
+
+@app.route("/select")
+def select_prompt_page():
+  prompts = Prompt.query.all()
+  return render_template("select.html", prompts=prompts)
+
+@app.route("/api/prompt/<int:prompt_id>")
+def get_prompt_api(prompt_id):
+  prompt = Prompt.query.filter_by(id=prompt_id).first()
+
+  if not prompt:
+    return render_template("error.html", message="prompt is not found"), 404
+  
+  return jsonify({
+    "id": prompt.id,
+    "name": prompt.name,
+    "description": prompt.description,
+    "content": prompt.content
+  })
+
+@app.route("/api/select-prompt", methods=["POST"])
+def select_prompt_api():
+  data = request.get_json()
+  prompt_id = data.get("prompt_id")
+
+  if not prompt_id:
+    return jsonify({"success": False, "message": "prompt id is not assingend"}), 400
+
+  prompt = Prompt.query.filter_by(id=prompt_id).first()
+  if not prompt:
+    return jsonify({"success": False, "message": "prompt is not found"}), 404
+
+  print(f"selected_prompt_idを{prompt_id}に設定します")
+  session["selected_prompt_id"] = prompt_id
+  session["selected_prompt_name"] = prompt.name
+
+  session.modified = True
+
+  return jsonify({
+    "success": True,
+    "prompt_id": prompt_id,
+    "prompt_name": prompt.name 
+  })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

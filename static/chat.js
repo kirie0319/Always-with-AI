@@ -2,6 +2,7 @@
 const chatBox = document.getElementById('chat-box');
 const inputField = document.getElementById('input');
 const sendButton = document.getElementById('send-btn');
+const promptNameElement = document.getElementById('prompt-name');
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,6 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
       send();
     }
   });
+
+  // セッションストレージから選択中のプロンプト名を取得して表示
+  const selectedPromptName = sessionStorage.getItem('selectedPromptName');
+  if (selectedPromptName) {
+    promptNameElement.textContent = selectedPromptName;
+  }
 });
 
 // Format timestamp
@@ -157,6 +164,7 @@ async function send() {
     // Send to server
     const res = await fetch('/chat', {
       method: 'POST',
+      credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })
     });
@@ -172,6 +180,13 @@ async function send() {
 
     // Add bot response
     appendMessage('ai', data.response);
+
+    // プロンプト名の更新（サーバーから返ってきた場合）
+    if (data.prompt_name) {
+      promptNameElement.textContent = data.prompt_name;
+      // セッションストレージに保存
+      sessionStorage.setItem('selectedPromptName', data.prompt_name);
+    }
   } catch (error) {
     console.error('Error:', error);
     removeTypingIndicator();

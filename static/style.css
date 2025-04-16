@@ -464,3 +464,43 @@ button:active {
   /* hover時ちょっと濃く */
   transform: translateY(-2px);
 }
+/* 現在のプロンプト表示エリア用のスタイル */
+.active-prompt {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: var(--border-radius);
+  padding: 10px 15px;
+  margin: 10px 16px;
+  display: flex;
+  align-items: center;
+  border-left: 4px solid var(--accent-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.active-prompt-label {
+  display: flex;
+  align-items: center;
+  color: var(--dark-color);
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.active-prompt-label i {
+  color: var(--accent-color);
+  margin-right: 6px;
+}
+
+.active-prompt-name {
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+/* ナビゲーションボタンのスタイル調整 */
+.navigation-button-container {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+  margin: 12px 0;
+  justify-content: center;
+}
+
+/* 既存のナビゲーションボタンのスタイルがあるため追加は不要 */

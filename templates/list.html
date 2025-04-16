@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロンプト一覧</title>
+  <link rel="stylesheet" href="/static/list.css">
+</head>
+
+<body>
+  <header>
+    <h1>プロンプト一覧</h1>
+    <a href="/">ホームに戻る</a>
+  </header>
+
+  <main>
+    <div class="prompts-container">
+      {% if data %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>名前</th>
+            <th>説明</th>
+            <th>アクション</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for prompt in data %}
+          <tr>
+            <td>{{ prompt.id }}</td>
+            <td>{{ prompt.name }}</td>
+            <td>{{ prompt.description }}</td>
+            <td>
+              <a href="/prompt/{{ prompt.id }}">編集</a>
+              <button class="delete-btn" data-id="{{ prompt.id }}">削除</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>プロンプトがありません。新しいプロンプトを作成してください。</p>
+      {% endif %}
+    </div>
+
+    <div class="create-prompt-section">
+      <h2>新しいプロンプトを作成</h2>
+      <form id="create-prompt-form">
+        <div class="form-group">
+          <label for="name">名前:</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">説明:</label>
+          <input type="text" id="description" name="description" required>
+        </div>
+
+        <div class="form-group">
+          <label for="content">内容:</label>
+          <textarea id="content" name="content" rows="10" required></textarea>
+        </div>
+
+        <button type="submit">作成</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="/static/list.js"></script>
+</body>
+
+</html>

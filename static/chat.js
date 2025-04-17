@@ -52,7 +52,7 @@ function renderMarkdown(text) {
   return marked.parse(text);
 }
 
-// マークダウンかどうかを判定する関数（改善点1）
+// マークダウンかどうかを判定する関数
 function containsMarkdown(text) {
   // 一般的なマークダウン記法をチェック
   const markdownPatterns = [
@@ -129,7 +129,7 @@ function appendMessage(role, text) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
 
-    // AIメッセージの場合はマークダウンをサポート（改善点2）
+    // AIメッセージの場合はマークダウンをサポート
     if (containsMarkdown(text)) {
       // マークダウンを含む場合
       const contentInner = document.createElement('div');
@@ -210,7 +210,202 @@ function removeTypingIndicator() {
   }
 }
 
-// デモンストレーション用のテストメッセージ（改善点3）
+// Server-Sent Eventsの処理
+let eventSource = null;
+
+// ユーザーメッセージをUIに追加し、AIレスポンスを開始する関数
+async function send() {
+  const text = inputField.value.trim();
+  if (!text) return;
+
+  // 入力フィールドをクリア
+  inputField.value = '';
+  inputField.focus();
+
+  // ユーザーメッセージをUIに追加
+  appendMessage('user', text);
+
+  // テスト用コード - 「test」と入力するとマークダウンテストを実行（開発時のみ）
+  if (text.toLowerCase() === 'test') {
+    testMarkdownRendering();
+    return;
+  }
+
+  // 既存のEventSourceがあれば閉じる
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+
+  // ローディング表示
+  const typingIndicator = showTyping();
+
+  try {
+    // POSTリクエスト
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
+    });
+
+    if (!response.ok) {
+      throw new Error('Error: ' + response.status);
+    }
+
+    if (response.headers.get('Content-Type').includes('text/event-stream')) {
+      // SSEストリーミングの場合
+      processEventStream(response);
+    } else {
+      // 通常のJSONレスポンスの場合（以前の実装）
+      const jsonData = await response.json();
+      removeTypingIndicator();
+      appendMessage('ai', jsonData.response);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    removeTypingIndicator();
+    appendMessage('ai', 'すみません、エラーが発生しました。もう一度お試しください。');
+  }
+}
+
+// SSEを処理する関数
+function processEventStream(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let assistant_text = '';
+
+  // メッセージ表示用の要素を作成
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'message bot';
+
+  const avatarDiv = document.createElement('div');
+  avatarDiv.className = 'avatar';
+  const avatarIcon = document.createElement('i');
+  avatarIcon.className = 'fas fa-robot';
+  avatarDiv.appendChild(avatarIcon);
+
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'message-content';
+
+  const contentInner = document.createElement('div');
+  contentInner.className = 'markdown-content';
+  contentDiv.appendChild(contentInner);
+
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'timestamp';
+  timeSpan.textContent = formatTimestamp();
+  contentDiv.appendChild(timeSpan);
+
+  messageDiv.appendChild(avatarDiv);
+  messageDiv.appendChild(contentDiv);
+
+  // 読み込み開始
+  read();
+
+  function read() {
+    reader.read().then(({ done, value }) => {
+      if (done) {
+        // ストリーム終了、必要なクリーンアップを行う
+        removeTypingIndicator();
+
+        // マークダウンの完全なレンダリング
+        if (containsMarkdown(assistant_text)) {
+          contentInner.innerHTML = renderMarkdown(assistant_text);
+
+          // コードブロックがあれば、highlight.jsを適用
+          if (hljs) {
+            contentInner.querySelectorAll('pre code').forEach((block) => {
+              hljs.highlightElement(block);
+            });
+          }
+        } else {
+          // マークダウンがない場合は段落に分ける
+          contentInner.innerHTML = '';
+          const paragraphs = assistant_text.split('\n\n');
+          for (const paragraph of paragraphs) {
+            if (paragraph.trim()) {
+              const p = document.createElement('p');
+              p.textContent = paragraph;
+              contentInner.appendChild(p);
+            }
+          }
+        }
+
+        return;
+      }
+
+      // 受信したバイナリデータを文字列に変換して蓄積
+      buffer += decoder.decode(value, { stream: true });
+
+      // イベントデータを解析
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // 最後の不完全な行は次回処理のために保持
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const eventData = JSON.parse(line.substring(6));
+
+            if (eventData.text) {
+              // 最初のテキストチャンクが来たら、タイピングインジケータを削除しメッセージ要素を追加
+              if (!assistant_text) {
+                removeTypingIndicator();
+                chatBox.appendChild(messageDiv);
+              }
+
+              // テキストを追加
+              assistant_text += eventData.text;
+
+              // 暫定的なレンダリング（ストリーミング表示）
+              if (containsMarkdown(assistant_text)) {
+                contentInner.innerHTML = renderMarkdown(assistant_text);
+              } else {
+                contentInner.innerHTML = '';
+                const paragraphs = assistant_text.split('\n\n');
+                for (const paragraph of paragraphs) {
+                  if (paragraph.trim()) {
+                    const p = document.createElement('p');
+                    p.textContent = paragraph;
+                    contentInner.appendChild(p);
+                  }
+                }
+              }
+
+              // 自動スクロール
+              scrollToBottom();
+            }
+
+            if (eventData.error) {
+              // エラーメッセージの処理
+              console.error('Error from server:', eventData.error);
+              removeTypingIndicator();
+              appendMessage('ai', 'すみません、エラーが発生しました: ' + eventData.error);
+            }
+
+            if (eventData.complete) {
+              // ストリーム完了通知
+              console.log('Stream complete');
+            }
+          } catch (e) {
+            console.error('Error parsing event data:', e, line.substring(6));
+          }
+        }
+      }
+
+      // 次のチャンクを読み込む
+      read();
+    }).catch(error => {
+      console.error('Error reading stream:', error);
+      removeTypingIndicator();
+      appendMessage('ai', 'すみません、データの読み込み中にエラーが発生しました。もう一度お試しください。');
+    });
+  }
+}
+
+// デモンストレーション用のテストメッセージ
 function testMarkdownRendering() {
   const markdownExamples = [
     "# マークダウンテスト\n\n**太字**と*斜体*と`コード`のテスト。\n\nコードブロック:\n```javascript\nconsole.log('Hello, world!');\n```\n\nリスト:\n- 項目1\n- 項目2\n  - ネストした項目\n\n> これは引用です。\n\n[リンク](https://example.com)",
@@ -222,109 +417,6 @@ function testMarkdownRendering() {
   setTimeout(() => {
     appendMessage('ai', markdownExamples[1]);
   }, 1000);
-}
-
-// Send message to server
-async function send() {
-  const text = inputField.value.trim();
-  if (!text) return;
-
-  // Clear input
-  inputField.value = '';
-  inputField.focus();
-
-  // Add user message to chat
-  appendMessage('user', text);
-
-  // テスト用コード - 「test」と入力するとマークダウンテストを実行（開発時のみ）
-  if (text.toLowerCase() === 'test') {
-    testMarkdownRendering();
-    return;
-  }
-
-  // Show typing indicator
-  const typingIndicator = showTyping();
-
-  try {
-    // Send to server
-    const res = await fetch('/chat', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
-
-    if (!res.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    const data = await res.json();
-
-    // Remove typing indicator
-    removeTypingIndicator();
-
-    // Add bot response
-    appendMessage('ai', data.response);
-
-    // プロンプト名の更新（サーバーから返ってきた場合）
-    if (data.prompt_name) {
-      promptNameElement.textContent = data.prompt_name;
-      // セッションストレージに保存
-      sessionStorage.setItem('selectedPromptName', data.prompt_name);
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    removeTypingIndicator();
-    appendMessage('ai', 'すみません、エラーが発生しました。もう一度お試しください。');
-  }
-}
-
-// プリセットメッセージを送信する機能
-function sendPresetMessage(message) {
-  // プリセットメッセージをチャットボックスに追加
-  appendMessage('user', message);
-
-  // 入力フィールドをクリア
-  inputField.value = '';
-
-  // タイピングインジケータを表示
-  const typingIndicator = showTyping();
-
-  // サーバーへ送信
-  fetch('/chat', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: message })
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // タイピングインジケータを削除
-      removeTypingIndicator();
-
-      // AIの応答をチャットボックスに追加
-      appendMessage('ai', data.response);
-
-      // プロンプト名の更新（サーバーから返ってきた場合）
-      if (data.prompt_name) {
-        promptNameElement.textContent = data.prompt_name;
-        // セッションストレージに保存
-        sessionStorage.setItem('selectedPromptName', data.prompt_name);
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      removeTypingIndicator();
-      appendMessage('ai', 'すみません、エラーが発生しました。もう一度お試しください。');
-    });
-
-  // チャットボックスを一番下までスクロール
-  scrollToBottom();
 }
 
 // Clear chat history

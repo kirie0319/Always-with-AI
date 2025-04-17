@@ -20,9 +20,14 @@ DEFAULT_OPENAI_MODEL = os.getenv("DEFAULT_OPENAI_MODEL", "gpt-4o")
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", 1024))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", 3))
 
-CHAT_LOG_FILE = os.getenv("CHAT_LOG_FILE", "chat_log.json")
-SUMMARY_FILE = os.getenv("SUMMARY_FILE", "chatsummary.json")
-USER_HISTORY_FILE = os.getenv("USER_HISTORY_FILE", "user_history.json")
 MAX_RALLIES = int(os.getenv("MAX_RALLIES", 7))
 
 PROMPTS_DIR = os.getenv("PROMPTS_DIR", "prompts")
+CHAT_LOG_FILE = "chat_log.json"
+SUMMARY_FILE = "chatsummary.json"
+USER_HISTORY_FILE = "user_history.json"
+MAX_RALLIES = 6
+YAML_PATH = "prompts/specific/finance.yaml"
+MAX_TOKENS_INPUT  = 8_000   # Claude に渡す入力上限
+MAX_TOKENS_OUTPUT = 512     # 期待する出力上限
+SAFETY_MARGIN     = 500     # header 系を見込んだ余白

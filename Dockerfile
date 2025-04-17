@@ -12,4 +12,5 @@ RUN python -m pip install --upgrade pip && \
 
 COPY . .
 
-CMD gunicorn app:app --bind 0.0.0.0:$PORT
+# 環境変数PORTを使用するための方法を変更
+CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8000}

@@ -1104,23 +1104,3 @@ body {
     font-size: 1.2em;
   }
 }
-
-/* ダークモード対応（必要に応じて） */
-@media (prefers-color-scheme: dark) {
-  .markdown-content pre {
-    background-color: #1e1e1e;
-    border-color: #333;
-  }
-
-  .markdown-content code {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .markdown-content table th {
-    background-color: #2d2d2d;
-  }
-
-  .markdown-content table tr:nth-child(even) {
-    background-color: #2a2a2a;
-  }
-}

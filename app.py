@@ -10,6 +10,7 @@ import json
 import uuid
 import threading
 import yaml
+import traceback
 
 load_dotenv()
 
@@ -18,6 +19,23 @@ SUMMARY_FILE = "chatsummary.json"
 USER_HISTORY_FILE = "user_history.json"
 MAX_RALLIES = 7
 YAML_PATH = "prompts/specific/finance.yaml"
+MAX_TOKENS_INPUT  = 8_000   # Claude に渡す入力上限
+MAX_TOKENS_OUTPUT = 512     # 期待する出力上限
+SAFETY_MARGIN     = 500     # header 系を見込んだ余白
+
+anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+
+anthropic_client = anthropic.Anthropic(
+  api_key=anthropic_api_key,
+)
+
+
+app = Flask(__name__, static_url_path='/static')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+db.init_app(app)
+migrate = Migrate(app, db)
 
 def load_json(filepath, default):
   try:
@@ -124,7 +142,7 @@ def generate_summary_in_background(history_json):
 
     anthropic_summary = anthropic_client.messages.create(
       model="claude-3-7-sonnet-20250219",
-      max_tokens=1024,
+      max_tokens=2048,
       messages=[
         {"role": "user", "content": summarizing_prompt}
       ]
@@ -135,22 +153,44 @@ def generate_summary_in_background(history_json):
   except Exception as e:
     print(f"Error generating summary: {e}")
 
+### new version
 
-# openai_api_key = os.getenv("OPENAI_API_KEY")
-anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+def count_claude_tokens(text: str) -> int:
+  return len(text) // 3
 
-# openai_client = OpenAI(api_key=openai_api_key)
-anthropic_client = anthropic.Anthropic(
-  api_key=anthropic_api_key,
-)
+# def compress_history(messages: list[dict], tokenizer=count_claude_tokens, max_tokens=MAX_TOKENS_INPUT):
+#   kept, token_total = [], 0
 
+#   for m in reversed(messages):
+#     cost = tokenizer(m["content"])
+#     if token_total + cost > max_tokens - SAFETY_MARGIN:
+#       break
+#     kept.insert(0, m)
+#     token_total += cost
+  
+#   older = messages[:len(messages) - len(kept)]
+#   if older:
+#     summary_text = summarize_messages(older)
+#     kept.insert(0, {"role": "system", "content": f"<previous summary> {summary_text}"})
 
-app = Flask(__name__, static_url_path='/static')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
-db.init_app(app)
-migrate = Migrate(app, db)
+#   return kept
+
+# def summarize_messages(msgs: list[dict]) -> str:
+#   joined = "\n".join([f"{m['role']}: {m['content']}" for m in msgs])
+#   prompt = "Summarize next 3 conversation rallies with users: \n" + joined[:4000]
+
+#   resp = anthropic_client.messages.create(
+#       model="claude-3-7-sonnet-20250219",
+#       max_tokens=2048,
+#       system="You are a skilful summariser.",
+#       messages=[
+#         {"role": "user", "content": prompt}
+#       ]
+#     )
+#   return resp.content[0].text.strip()
+
+### new version
+
 
 @app.route("/")
 def index():
@@ -158,6 +198,7 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
+  try:
     user_identifier = request.remote_addr
     user_id = get_user_id(user_identifier)
     history = load_json("chat_log.json", [])
@@ -171,6 +212,7 @@ def chat():
 
     data = request.get_json()
     user_input = data.get("message", "")
+    print(f"User input: {user_input[:50]}...")
 
     user_message = {
         "role": "user", 
@@ -179,39 +221,47 @@ def chat():
         "timestamp": datetime.now().isoformat()
     }
     history.append(user_message)
+    # print("Comporessing history...")
+    # trimmed_history = compress_history(history)
+    # print(trimmed_history)
     selected_prompt_id = session.get("selected_prompt_id")
     print(selected_prompt_id)
     base_prompt = "you are helpful AI assistant"
     if selected_prompt_id:
       prompt_obj = Prompt.query.filter_by(id=selected_prompt_id).first()
-      print(prompt_obj.content)
-      base_prompt = prompt_obj.content
+      if prompt_obj:
+        print(f"Found prompt: {prompt_obj.name}")
+        base_prompt = prompt_obj.content
+      else:
+        print("Prompt object not found for ID:", selected_prompt_id)
 
-    prompt = f"""
-    {base_prompt}
+      print("Calling Anthropic API...")
+      prompt = f"""
+      {base_prompt}
 
-    ---
-    ###Summary fo conversation
-    {summary_json}
-    ###Recent conversation with users
-    {user_history_json}
-    """
-    print(prompt)
+      ---
+      ###Summary fo conversation
+      {summary_json}
+      ###Recent conversation with users
+      {user_history_json}
+      """
 
-
-    anthropic_message = anthropic_client.messages.create(
-      model="claude-3-7-sonnet-20250219",
-      max_tokens=2048,
-      system=prompt,
-      messages=[
-        {"role": "user", "content": user_input}
-      ]
-    )
-    
-
+      try:
+        resp = anthropic_client.messages.create(
+          model="claude-3-7-sonnet-20250219",
+          max_tokens=2048,
+          system=prompt,
+          messages=[
+            {"role": "user", "content": user_input}
+          ]
+        )
+      except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    assistant_text = resp.content[0].text
+  
     assistant_message = {
         "role": "assistant", 
-        "content": anthropic_message.content[0].text, 
+        "content": assistant_text, 
         "user_id": user_id,
         "id": str(uuid.uuid4()),  # Adding message ID like in the second code
         "timestamp": datetime.now().isoformat()
@@ -219,9 +269,28 @@ def chat():
     history.append(assistant_message)
     save_json(CHAT_LOG_FILE, history)
 
+    try:
+      summarize_user_history = anthropic_client.messages.create(
+        model="claude-3-haiku-20240307",
+        max_tokens=2048,
+        system="summarize the resopnse in one sentence in order to keep the conversation with users natural",
+        messages=[
+          {"role": "user", "content": assistant_text}
+        ]
+      )
+    except Exception as e:
+      return jsonify({"error": str(e)}), 500
+    assistant_summary_message = {
+        "role": "assistant", 
+        "content": summarize_user_history.content[0].text, 
+        "user_id": user_id,
+        "id": str(uuid.uuid4()),  # Adding message ID like in the second code
+        "timestamp": datetime.now().isoformat()
+    }
+
     message_pair = {
         "user": user_message,
-        "assistant": assistant_message,
+        "assistant": assistant_summary_message,
         "timestamp": datetime.now().isoformat()
     }
     update_user_messages(user_identifier, message_pair)
@@ -233,9 +302,13 @@ def chat():
       ).start()
 
     return jsonify({
-        "response": anthropic_message.content[0].text,
+        "response": assistant_text,
         "timestamp": datetime.now().isoformat()
     })
+  except Exception as e:
+    error_details = traceback.format_exc()
+    print(f"Error in/chat: {str(e)}\n{error_details}")
+    return jsonify({"error": str(e), "details": error_details}), 500
 
 @app.route("/clear", methods=["POST"])
 def clear_chat_data():
@@ -341,6 +414,6 @@ def select_prompt_api():
   })
 
 if __name__ == '__main__':
-    # port = int(os.environ.get('PORT', 5000))
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5000))
+    # port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port)

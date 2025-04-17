@@ -1,53 +1,100 @@
+/* 変数定義 */
+:root {
+  --financial-primary: #F6A650;
+  --financial-text: #333333;
+  --financial-light-bg: #f5f5f5;
+  --financial-white: #ffffff;
+  --financial-border: #e0e0e0;
+  --financial-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --financial-radius: 8px;
+}
+
 /* 基本スタイル */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
 body {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  color: #333;
+  background-color: var(--financial-light-bg);
+  color: var(--financial-text);
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f5f5f5;
+  line-height: 1.6;
 }
 
+/* ヘッダースタイル */
 header {
-  margin-bottom: 30px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
+  background: var(--financial-white);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--financial-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+  border-radius: var(--financial-radius);
+  box-shadow: var(--financial-shadow);
 }
 
 h1 {
-  color: #2c3e50;
-  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--financial-text);
+}
+
+h1 span {
+  color: var(--financial-primary);
 }
 
 a {
-  color: #3498db;
+  color: var(--financial-primary);
   text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+header a {
+  background-color: var(--financial-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+/* メインコンテンツ */
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* テーブルスタイル */
 .prompts-container {
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+  background-color: var(--financial-white);
+  border-radius: var(--financial-radius);
+  box-shadow: var(--financial-shadow);
+  padding: 16px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  background-color: var(--financial-white);
   overflow: hidden;
 }
 
 thead {
-  background-color: #3498db;
+  background-color: var(--financial-primary);
   color: white;
 }
 
@@ -55,7 +102,7 @@ th,
 td {
   padding: 12px 15px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--financial-border);
 }
 
 tr:last-child td {
@@ -68,17 +115,49 @@ tr:hover {
 
 /* ボタンスタイル */
 button {
-  background-color: #3498db;
+  background-color: var(--financial-primary);
   color: white;
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.1s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 button:hover {
-  background-color: #2980b9;
+  opacity: 0.9;
+}
+
+button[type="submit"] {
+  background-color: var(--financial-primary);
+  color: white;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 #e08e30;
+  transition: all 0.1s ease;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 0;
+}
+
+button[type="submit"]:hover {
+  background-color: #e08e30;
+}
+
+button[type="submit"]:active {
+  top: 4px;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+  background-color: #d08020;
 }
 
 .delete-btn {
@@ -92,29 +171,41 @@ button:hover {
 
 /* フォームスタイル */
 .create-prompt-section {
-  background-color: white;
+  background-color: var(--financial-white);
   padding: 20px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: var(--financial-radius);
+  box-shadow: var(--financial-shadow);
+}
+
+.create-prompt-section h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--financial-text);
+  margin-bottom: 16px;
+  border-bottom: solid #DCDCDC;
+  padding-bottom: 12px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  font-size: 13px;
+  color: var(--financial-text);
+  width: 100px;
 }
 
 input,
 textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
+  padding: 8px;
+  border: 1px solid var(--financial-border);
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 13px;
 }
 
 textarea {

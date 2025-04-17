@@ -201,7 +201,7 @@ def chat():
 
     anthropic_message = anthropic_client.messages.create(
       model="claude-3-7-sonnet-20250219",
-      max_tokens=1024,
+      max_tokens=2048,
       system=prompt,
       messages=[
         {"role": "user", "content": user_input}
@@ -341,6 +341,6 @@ def select_prompt_api():
   })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    # port = int(os.environ.get('PORT', 5001))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port)

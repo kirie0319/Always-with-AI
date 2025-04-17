@@ -879,3 +879,248 @@ body {
     height: calc(100% - 120px);
   }
 }
+/* マークダウンコンテンツのための追加CSS */
+
+/* 基本的なマークダウンコンテナ */
+.markdown-content {
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* 見出し */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--financial-text);
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+}
+
+.markdown-content h4 {
+  font-size: 1.1em;
+}
+
+/* 段落 */
+.markdown-content p {
+  margin-bottom: 12px;
+}
+
+/* リスト */
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5em;
+  margin: 8px 0;
+}
+
+.markdown-content li {
+  margin-bottom: 4px;
+}
+
+.markdown-content li>ul,
+.markdown-content li>ol {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* インラインコード */
+.markdown-content code {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 85%;
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  color: #e83e8c;
+}
+
+/* コードブロック */
+.markdown-content pre {
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid #e1e4e8;
+}
+
+.markdown-content pre code {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 85%;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  line-height: 1.45;
+  display: block;
+  white-space: pre;
+}
+
+/* テーブル */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  overflow-x: auto;
+  display: block;
+  font-size: 0.9em;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  border: 1px solid #e1e4e8;
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.markdown-content table th {
+  background-color: #f6f8fa;
+  font-weight: 600;
+}
+
+.markdown-content table tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+/* 引用 */
+.markdown-content blockquote {
+  border-left: 4px solid var(--financial-primary);
+  color: #6a737d;
+  margin: 12px 0;
+  padding: 0 12px;
+}
+
+.markdown-content blockquote> :first-child {
+  margin-top: 0;
+}
+
+.markdown-content blockquote> :last-child {
+  margin-bottom: 0;
+}
+
+/* 水平線 */
+.markdown-content hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 16px 0;
+  background-color: #e1e4e8;
+  border: 0;
+}
+
+/* リンク */
+.markdown-content a {
+  color: var(--financial-primary);
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* 強調とイタリック */
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* 画像 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border-radius: 4px;
+}
+
+/* チェックボックス */
+.markdown-content input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+/* コードのハイライト（highlight.js対応） */
+.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* ユーザーメッセージ内のマークダウン向け調整 */
+.message.user .markdown-content {
+  color: white;
+}
+
+.message.user .markdown-content code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.message.user .markdown-content a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.message.user .markdown-content blockquote {
+  border-left-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .markdown-content pre {
+    padding: 8px;
+  }
+
+  .markdown-content table {
+    font-size: 0.8em;
+  }
+
+  .markdown-content h1 {
+    font-size: 1.3em;
+  }
+
+  .markdown-content h2 {
+    font-size: 1.2em;
+  }
+}
+
+/* ダークモード対応（必要に応じて） */
+@media (prefers-color-scheme: dark) {
+  .markdown-content pre {
+    background-color: #1e1e1e;
+    border-color: #333;
+  }
+
+  .markdown-content code {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .markdown-content table th {
+    background-color: #2d2d2d;
+  }
+
+  .markdown-content table tr:nth-child(even) {
+    background-color: #2a2a2a;
+  }
+}

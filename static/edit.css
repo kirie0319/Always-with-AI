@@ -1,83 +1,120 @@
+/* 変数定義 */
+:root {
+  --financial-primary: #F6A650;
+  --financial-text: #333333;
+  --financial-light-bg: #f5f5f5;
+  --financial-white: #ffffff;
+  --financial-border: #e0e0e0;
+  --financial-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --financial-radius: 8px;
+}
+
 /* 基本スタイル */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
 body {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  color: #333;
+  background-color: var(--financial-light-bg);
+  color: var(--financial-text);
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f5f5f5;
+  line-height: 1.6;
 }
 
 header {
-  margin-bottom: 30px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
+  background: var(--financial-white);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--financial-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+  border-radius: var(--financial-radius);
+  box-shadow: var(--financial-shadow);
 }
 
 h1 {
-  color: #2c3e50;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--financial-text);
   margin: 0;
 }
 
 a {
-  color: #3498db;
+  color: var(--financial-primary);
   text-decoration: none;
 }
 
+header a {
+  background-color: var(--financial-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
 a:hover {
-  text-decoration: underline;
+  opacity: 0.9;
+  text-decoration: none;
 }
 
 /* 編集フォームスタイル */
 .edit-prompt-container {
-  background-color: white;
-  padding: 25px;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--financial-white);
+  padding: 20px;
+  border-radius: var(--financial-radius);
+  box-shadow: var(--financial-shadow);
 }
 
 h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--financial-text);
   margin-top: 0;
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: solid #DCDCDC;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   font-weight: bold;
-  color: #555;
+  font-size: 13px;
+  color: var(--financial-text);
+  width: 100px;
 }
 
 input,
 textarea {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
+  padding: 8px;
+  border: 1px solid var(--financial-border);
   border-radius: 4px;
-  font-size: 16px;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  font-size: 13px;
+  transition: border-color 0.2s;
 }
 
 input:focus,
 textarea:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 4px rgba(52, 152, 219, 0.3);
+  border-color: var(--financial-primary);
   outline: none;
 }
 
 input[readonly] {
-  background-color: #f8f8f8;
+  background-color: var(--financial-light-bg);
   color: #888;
   cursor: not-allowed;
 }
@@ -93,41 +130,61 @@ textarea {
 .form-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 button {
-  padding: 12px 24px;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
-  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
+  transition: all 0.1s ease;
 }
 
 button:hover {
-  transform: translateY(-2px);
-}
-
-button:active {
-  transform: translateY(0);
+  opacity: 0.9;
 }
 
 #update-btn {
-  background-color: #3498db;
+  background-color: var(--financial-primary);
   color: white;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 #e08e30;
+  transition: all 0.1s ease;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 0;
   flex: 2;
   margin-right: 10px;
 }
 
 #update-btn:hover {
-  background-color: #2980b9;
+  background-color: #e08e30;
+}
+
+#update-btn:active {
+  top: 4px;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+  background-color: #d08020;
 }
 
 #delete-btn {
   background-color: #e74c3c;
   color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.1s ease;
   flex: 1;
 }
 
@@ -151,6 +208,6 @@ button:active {
   input,
   textarea,
   button {
-    font-size: 14px;
+    font-size: 13px;
   }
 }

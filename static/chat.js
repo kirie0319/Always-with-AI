@@ -47,7 +47,31 @@ function formatTimestamp() {
 
 // マークダウンをパースして安全に描画する関数
 function renderMarkdown(text) {
+  // DOMPurifyを使用している場合はここでサニタイズする
+  // return DOMPurify.sanitize(marked.parse(text));
   return marked.parse(text);
+}
+
+// マークダウンかどうかを判定する関数（改善点1）
+function containsMarkdown(text) {
+  // 一般的なマークダウン記法をチェック
+  const markdownPatterns = [
+    /\*\*.*?\*\*/,           // 太字 **bold**
+    /\*.*?\*/,               // 斜体 *italic*
+    /`.*?`/,                 // インラインコード `code`
+    /```[\s\S]*?```/,        // コードブロック ```code```
+    /^#+\s+.*/m,             // 見出し # Heading
+    /^\s*[-*+]\s+.*/m,       // リスト - item
+    /^\s*\d+\.\s+.*/m,       // 数字リスト 1. item
+    /\[.*?\]\(.*?\)/,        // リンク [link](url)
+    /!\[.*?\]\(.*?\)/,       // 画像 ![alt](url)
+    /^\s*>\s+.*/m,           // 引用 > quote
+    /^\s*---+\s*$/m,         // 水平線 ---
+    /\|\s.*\s\|/             // テーブル | table |
+  ];
+
+  // いずれかのパターンにマッチすればマークダウンと判定
+  return markdownPatterns.some(pattern => pattern.test(text));
 }
 
 // タブ切り替え関数
@@ -105,8 +129,8 @@ function appendMessage(role, text) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
 
-    // AIメッセージの場合はマークダウンをサポート
-    if (text.includes('**')) {
+    // AIメッセージの場合はマークダウンをサポート（改善点2）
+    if (containsMarkdown(text)) {
       // マークダウンを含む場合
       const contentInner = document.createElement('div');
       contentInner.className = 'markdown-content';
@@ -186,6 +210,20 @@ function removeTypingIndicator() {
   }
 }
 
+// デモンストレーション用のテストメッセージ（改善点3）
+function testMarkdownRendering() {
+  const markdownExamples = [
+    "# マークダウンテスト\n\n**太字**と*斜体*と`コード`のテスト。\n\nコードブロック:\n```javascript\nconsole.log('Hello, world!');\n```\n\nリスト:\n- 項目1\n- 項目2\n  - ネストした項目\n\n> これは引用です。\n\n[リンク](https://example.com)",
+    "テーブルのテスト:\n\n| 項目 | 価格 |\n|------|------|\n| りんご | 100円 |\n| バナナ | 80円 |"
+  ];
+
+  // マークダウンのテストメッセージを表示
+  appendMessage('ai', markdownExamples[0]);
+  setTimeout(() => {
+    appendMessage('ai', markdownExamples[1]);
+  }, 1000);
+}
+
 // Send message to server
 async function send() {
   const text = inputField.value.trim();
@@ -197,6 +235,12 @@ async function send() {
 
   // Add user message to chat
   appendMessage('user', text);
+
+  // テスト用コード - 「test」と入力するとマークダウンテストを実行（開発時のみ）
+  if (text.toLowerCase() === 'test') {
+    testMarkdownRendering();
+    return;
+  }
 
   // Show typing indicator
   const typingIndicator = showTyping();

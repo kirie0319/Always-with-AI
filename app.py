@@ -17,7 +17,7 @@ load_dotenv()
 CHAT_LOG_FILE = "chat_log.json"
 SUMMARY_FILE = "chatsummary.json"
 USER_HISTORY_FILE = "user_history.json"
-MAX_RALLIES = 7
+MAX_RALLIES = 6
 YAML_PATH = "prompts/specific/finance.yaml"
 MAX_TOKENS_INPUT  = 8_000   # Claude に渡す入力上限
 MAX_TOKENS_OUTPUT = 512     # 期待する出力上限
@@ -67,8 +67,22 @@ def get_user_id(user_identifier):
 
   return user_history[user_identifier]["user_id"]
 
+def get_last_conversation_pair():
+  history = load_json(CHAT_LOG_FILE, [])
+  if len(history) < 2:
+    return None
+  
+  for i in range(len(history) -2, -1, -1):
+    if history[i]["role"] == "user" and history[i +1]["role"] == "assistant":
+      return {
+        "user": history[i],
+        "assistant": history[i +1]
+      }
+  return None
+
 def update_user_messages(user_identifier, message_pair):
   user_history = load_json(USER_HISTORY_FILE, {})
+  history = load_json(CHAT_LOG_FILE, [])
 
   if user_history is None or isinstance(user_history, list):
     user_history = {}
@@ -87,7 +101,8 @@ def update_user_messages(user_identifier, message_pair):
   if "messages" not in user_history[user_identifier]:
     user_history[user_identifier]["messages"] = []
 
-  user_history[user_identifier]["messages"].append(message_pair)
+  if len(history) > 2:
+    user_history[user_identifier]["messages"].append(history[-4:-2])
 
   if len(user_history[user_identifier]["messages"]) > MAX_RALLIES:
     user_history[user_identifier]["messages"] = user_history[user_identifier]["messages"][-MAX_RALLIES:]
@@ -95,6 +110,11 @@ def update_user_messages(user_identifier, message_pair):
   save_json(USER_HISTORY_FILE, user_history)
 
 def generate_summary_in_background(history_json):
+  last_pair = get_last_conversation_pair()
+  if last_pair:
+    last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
+  else:
+    last_two_json = "会話履歴が見つかりませんでした。"
   try:
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     anthropic_client = anthropic.Anthropic(
@@ -138,11 +158,14 @@ def generate_summary_in_background(history_json):
 
     And also here is the conversation history with users that is last 7 rallies:
     {user_history_json}
+
+    And this is the last conversation with users:
+    {last_two_json}
     """
 
     anthropic_summary = anthropic_client.messages.create(
       model="claude-3-7-sonnet-20250219",
-      max_tokens=2048,
+      max_tokens=4000,
       messages=[
         {"role": "user", "content": summarizing_prompt}
       ]
@@ -199,6 +222,11 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
   try:
+    last_pair = get_last_conversation_pair()
+    if last_pair:
+      last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
+    else:
+      last_two_json = "会話履歴が見つかりませんでした。"
     user_identifier = request.remote_addr
     user_id = get_user_id(user_identifier)
     history = load_json("chat_log.json", [])
@@ -234,6 +262,7 @@ def chat():
         base_prompt = prompt_obj.content
       else:
         print("Prompt object not found for ID:", selected_prompt_id)
+    
 
       print("Calling Anthropic API...")
       prompt = f"""
@@ -244,12 +273,15 @@ def chat():
       {summary_json}
       ###Recent conversation with users
       {user_history_json}
+      ###Last conversation with users
+      {last_two_json}
       """
+      print(prompt)
 
       try:
         resp = anthropic_client.messages.create(
           model="claude-3-7-sonnet-20250219",
-          max_tokens=2048,
+          max_tokens=8000,
           system=prompt,
           messages=[
             {"role": "user", "content": user_input}
@@ -273,7 +305,33 @@ def chat():
       summarize_user_history = anthropic_client.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=2048,
-        system="summarize the resopnse in one sentence in order to keep the conversation with users natural",
+        system="""You are an expert conversation summarizer.
+
+    Your task is to analyze and summarize response of AI assistant. The goal is to extract key details and provide a clear, short, structured summary of the conversation.
+
+    Use the following output format:
+
+    ---
+
+    ### Chat Summary
+
+    #### 1. **Overview**
+    Briefly describe the overall context of the conversation, the participants, and the tone.
+
+    #### 2. **Key Points**
+    List 5-7 bullet points that highlight the most important facts, insights, or decisions discussed during the conversation.
+
+    #### 3. **Topic Timeline** (optional)
+    If applicable, outline the main topics discussed in chronological order.
+
+    #### 4. **Follow-up Items**
+    List any remaining questions, action items, or topics that could be explored further.
+
+    #### 5. **Context Notes**
+    Mention any relevant background, such as the fictional setting, tone of the assistant, or relationship between participants.
+
+    ---
+    """,
         messages=[
           {"role": "user", "content": assistant_text}
         ]

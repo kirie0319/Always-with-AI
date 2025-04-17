@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeals</title>
+  <title>Financial Supporter AI</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,14 +16,15 @@
 </head>
 
 <body>
-  <div class="chat-container">
+  <div class="chat-container financial-container">
     <div class="chat-header">
       <div class="logo">
-        <i class="fas fa-robot"></i>
-        <h1>Zeals<span>.AI</span></h1>
+        <i class="fas fa-chart-line"></i>
+        <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
+            class="accent-letter">AI</span></h1>
       </div>
-      <p class="tagline">意思決定のサポート</p>
     </div>
+
     <div class="navigation-button-container">
       <a href="/prompt" class="nav-btn">
         <i class="fas fa-edit"></i> プロンプトを編集する
@@ -41,34 +42,508 @@
       <div id="prompt-name" class="active-prompt-name">デフォルト</div>
     </div>
 
-    <div class="chat-messages" id="chat-box">
-      <div class="message bot">
-        <div class="avatar">
-          <i class="fas fa-robot"></i>
+    <!-- メインコンテンツ -->
+    <div class="financial-main-content">
+      <!-- 左側：入力フォームエリア -->
+      <div class="financial-form-container">
+        <!-- タブナビゲーション -->
+        <div class="financial-tab-navigation">
+          <div class="financial-tab-item active" data-tab="customer-info">顧客情報</div>
+          <div class="financial-tab-item" data-tab="life-simulation">ライフシミュレーション</div>
+          <div class="financial-tab-item" data-tab="investment-strategy">投資戦略</div>
         </div>
-        <div class="message-content">
-          <p>こんにちは！Zeals.AIです!</p>
-          <span class="timestamp">今</span>
-        </div>
-      </div>
-    </div>
 
-    <div class="chat-input">
-      <div class="input-container">
-        <input type="text" id="input" placeholder="例：東京で美味しい寿司を食べたいです..." />
-        <button id="send-btn" onclick="send()">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+        <!-- 顧客情報タブのコンテンツ -->
+        <div id="customer-info-content" class="tab-content active">
+          <!-- Step 0: CRM連携 -->
+          <div id="step-0" class="financial-step-container">
+            <div class="financial-step-header">
+              <div class="financial-step-number">Step 0</div>
+              <div class="financial-step-title">CRM情報と連携する</div>
+            </div>
+
+            <div class="financial-step-content">
+              <p class="financial-instruction">CIFを入力し、ボタンを押すとStep1の入力を省略することができます。</p>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="cif">CIF</label>
+                <input type="text" id="cif" value="6238196171983">
+              </div>
+
+              <div class="first-financial-button-container">
+                <button id="connect-info-btn" class="financial-action-button">情報を連携する</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: 本人情報入力 -->
+          <div id="step-1" class="financial-step-container hidden">
+            <div class="financial-step-header">
+              <div class="financial-step-number">Step 1</div>
+              <div class="financial-step-title">本人情報の入力</div>
+            </div>
+
+            <div class="financial-step-content">
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="age">年齢</label>
+                <input type="number" id="age" value="34">
+                <span>歳</span>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="industry">業界</label>
+                <select id="industry">
+                  <option value="IT業界">IT業界</option>
+                  <option value="製造業">製造業</option>
+                  <option value="金融業">金融業</option>
+                  <option value="小売業">小売業</option>
+                  <option value="その他">その他</option>
+                </select>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="company">会社名</label>
+                <input type="text" id="company" value="株式会社ZEALS">
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="position">役職</label>
+                <select id="position">
+                  <option value="一般社員">一般社員</option>
+                  <option value="管理職・マネージャー" selected>管理職・マネージャー</option>
+                  <option value="役員">役員</option>
+                  <option value="経営者">経営者</option>
+                </select>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="job-type">職種</label>
+                <select id="job-type">
+                  <option value="営業" selected>営業</option>
+                  <option value="技術職">技術職</option>
+                  <option value="事務">事務</option>
+                  <option value="その他">その他</option>
+                </select>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label" for="annual-income">年収</label>
+                <input type="number" id="annual-income" value="700">
+                <span>万円</span>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">家族構成</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button" data-value="独身">独身</button>
+                  <button class="financial-option-button active" data-value="世帯持ち">世帯持ち</button>
+                </div>
+              </div>
+
+              <div id="family-info" class="financial-family-info">
+                <h3 class="financial-section-title">家族情報</h3>
+
+                <div class="family-member">
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">続柄</label>
+                    <select class="family-relation">
+                      <option value="配偶者" selected>配偶者</option>
+                      <option value="子供">子供</option>
+                      <option value="親">親</option>
+                      <option value="その他">その他</option>
+                    </select>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">年齢</label>
+                    <input type="number" class="family-age" value="34">
+                    <span>歳</span>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">職業</label>
+                    <select class="family-occupation">
+                      <option value="会社員" selected>会社員</option>
+                      <option value="自営業">自営業</option>
+                      <option value="学生">学生</option>
+                      <option value="無職">無職</option>
+                      <option value="その他">その他</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button id="add-family-member" class="financial-add-button">
+                <i class="fas fa-plus"></i>
+              </button>
+
+              <div class="financial-button-container">
+                <button id="back-to-step-0" class="financial-secondary-button">前へ戻る</button>
+                <button id="next-to-step-2" class="financial-action-button">次へ進む</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: 財務状況の入力 -->
+          <div id="step-2" class="financial-step-container hidden">
+            <div class="financial-step-header">
+              <div class="financial-step-number">Step 2</div>
+              <div class="financial-step-title">財務状況の入力</div>
+            </div>
+
+            <div class="financial-step-content">
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">貯金額</label>
+                <input type="text" id="savings" value="700">
+                <span>万円</span>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">運用資産</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div id="investments-container" class="financial-section-container">
+                <h3 class="financial-section-title">資産情報</h3>
+
+                <div class="investment-item">
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">金融商品</label>
+                    <select class="investment-type">
+                      <option value="投資信託" selected>投資信託</option>
+                      <option value="株式">株式</option>
+                      <option value="債券">債券</option>
+                      <option value="ETF">ETF</option>
+                      <option value="その他">その他</option>
+                    </select>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">運用金額</label>
+                    <input type="text" class="investment-amount" value="500">
+                    <span>万円</span>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">商品名</label>
+                    <input type="text" class="investment-name" value="" placeholder="任意">
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">リスク</label>
+                    <select class="investment-risk">
+                      <option value="" selected>リスクを選択してください</option>
+                      <option value="低リスク">低リスク</option>
+                      <option value="中リスク">中リスク</option>
+                      <option value="高リスク">高リスク</option>
+                    </select>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">満期</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button active" data-value="true">あり</button>
+                      <button class="financial-option-button" data-value="false">なし</button>
+                    </div>
+                  </div>
+                </div>
+
+                <button id="add-investment" class="financial-add-button">
+                  <i class="fas fa-plus"></i> 
+                </button>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">退職金（予定）</label>
+                <input type="text" id="retirement" value="2,000">
+                <span>万円</span>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">自家用車</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">マイホーム</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">生活費（月）</label>
+                <input type="text" id="living-expenses" value="40">
+                <span>万円</span>
+              </div>
+
+              <div class="financial-section-container">
+                <h3 class="financial-section-title">ローン情報</h3>
+
+                <div class="loan-item">
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">種別</label>
+                    <select class="loan-type">
+                      <option value="住宅ローン" selected>住宅ローン</option>
+                      <option value="自動車ローン">自動車ローン</option>
+                      <option value="教育ローン">教育ローン</option>
+                      <option value="フリーローン">フリーローン</option>
+                      <option value="その他">その他</option>
+                    </select>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">残高</label>
+                    <input type="text" class="loan-balance" value="2,000">
+                    <span>万円</span>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">残月数</label>
+                    <input type="text" class="loan-remaining-months" value="240">
+                    <span>ヶ月</span>
+                  </div>
+                </div>
+
+                <div class="loan-item">
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">種別</label>
+                    <select class="loan-type">
+                      <option value="住宅ローン">住宅ローン</option>
+                      <option value="自動車ローン" selected>自動車ローン</option>
+                      <option value="教育ローン">教育ローン</option>
+                      <option value="フリーローン">フリーローン</option>
+                      <option value="その他">その他</option>
+                    </select>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">残高</label>
+                    <input type="text" class="loan-balance" value="400">
+                    <span>万円</span>
+                  </div>
+
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">残月数</label>
+                    <input type="text" class="loan-remaining-months" value="84">
+                    <span>ヶ月</span>
+                  </div>
+                </div>
+
+                <button id="add-loan" class="financial-add-button">
+                  <i class="fas fa-plus"></i> 
+                </button>
+              </div>
+
+              <div class="financial-button-container">
+                <button id="back-to-step-1" class="financial-secondary-button">前へ戻る</button>
+                <button id="next-to-step-3" class="financial-action-button">次へ進む</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: 各種ご意向 -->
+          <div id="step-3" class="financial-step-container hidden">
+            <div class="financial-step-header">
+              <div class="financial-step-number">Step 3</div>
+              <div class="financial-step-title">各種ご意向</div>
+            </div>
+
+            <div class="financial-step-content">
+              <p class="financial-instruction">下記ライフイベントのご予定はありますか？</p>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">車の購入</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">家のリフォーム</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">国内旅行</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">海外旅行</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">ペットの飼育</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">介護の不安</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">その他支出</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">投資スタンス</label>
+                <select id="investment-stance">
+                  <option value="ローリスク ローリターン">ローリスク ローリターン</option>
+                  <option value="ミドルリスク ミドルリターン" selected>ミドルリスク ミドルリターン</option>
+                  <option value="ハイリスク ハイリターン">ハイリスク ハイリターン</option>
+                </select>
+              </div>
+
+              <div class="financial-input-row">
+                <label class="financial-input-row-label">お子様のご予定</label>
+                <div class="financial-button-group">
+                  <button class="financial-option-button active" data-value="true">あり / ほしい</button>
+                  <button class="financial-option-button" data-value="false">なし</button>
+                </div>
+              </div>
+
+              <div id="child-education-container" class="financial-section-container">
+                <h3 class="financial-section-title">第1子 進学先</h3>
+                <div class="school-item">
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">幼稚園</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button active" data-value="国公立">国公立</button>
+                      <button class="financial-option-button" data-value="私立">私立</button>
+                    </div>
+                  </div>
+                  
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">小学校</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button active" data-value="国公立">国公立</button>
+                      <button class="financial-option-button" data-value="私立">私立</button>
+                    </div>
+                  </div>
+                  
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">中学校</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button active" data-value="国公立">国公立</button>
+                      <button class="financial-option-button" data-value="私立">私立</button>
+                    </div>
+                  </div>
+                  
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">高校</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button" data-value="国公立">国公立</button>
+                      <button class="financial-option-button active" data-value="私立">私立</button>
+                    </div>
+                  </div>
+                  
+                  <div class="financial-input-row">
+                    <label class="financial-input-row-label">大学</label>
+                    <div class="financial-button-group">
+                      <button class="financial-option-button" data-value="国公立">国公立</button>
+                      <button class="financial-option-button active" data-value="私立">私立</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="financial-button-container">
+                <button id="back-to-step-2" class="financial-secondary-button">前へ戻る</button>
+                <button id="complete-form" class="financial-action-button">完了</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ライフシミュレーションタブのコンテンツ -->
+        <div id="life-simulation-content" class="tab-content hidden">
+          <div class="development-message">
+            <div class="development-icon">🔨</div>
+            <h3 class="development-title">ライフシミュレーション機能は現在開発中です</h3>
+            <p class="development-description">
+              お客様のライフプランをシミュレーションする機能は近日公開予定です。今しばらくお待ちください。
+            </p>
+            <button class="financial-action-button return-to-customer-info">顧客情報に戻る</button>
+          </div>
+        </div>
+
+        <!-- 投資戦略タブのコンテンツ -->
+        <div id="investment-strategy-content" class="tab-content hidden">
+          <div class="development-message">
+            <div class="development-icon">📊</div>
+            <h3 class="development-title">投資戦略機能は現在開発中です</h3>
+            <p class="development-description">
+              お客様に最適な資産運用プランをご提案する機能は近日公開予定です。今しばらくお待ちください。
+            </p>
+            <button class="financial-action-button return-to-customer-info">顧客情報に戻る</button>
+          </div>
+        </div>
       </div>
-      <div class="actions">
-        <button id="clear-btn" onclick="clearChat()" class="secondary-btn">
-          <i class="fas fa-trash-alt"></i> チャットをクリア
-        </button>
+
+      <!-- 右側：チャットメッセージエリア -->
+      <div class="financial-response-container">
+        <!-- チャットメッセージ表示エリア -->
+        <div class="chat-messages" id="chat-box">
+          <div class="message bot">
+            <div class="avatar">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+              <p>こんにちは！Financial Supporter AIです。資産運用やライフプランニングについてお手伝いします。どのようなことでもお気軽にご相談ください。</p>
+              <span class="timestamp">今</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 入力フォーム - 右側のチャットエリアに含める -->
+        <div class="chat-input">
+          <div class="input-container">
+            <input type="text" id="input" placeholder="例：投資についてアドバイスが欲しいです..." />
+            <button id="send-btn" onclick="send()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+          <div class="actions">
+            <button id="clear-btn" onclick="clearChat()" class="secondary-btn">
+              <i class="fas fa-trash-alt"></i> チャットをクリア
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="/static/chat.js"></script>
+  <script src="/static/form-navigation.js"></script>
 </body>
 
 </html>

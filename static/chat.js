@@ -50,58 +50,99 @@ function renderMarkdown(text) {
   return marked.parse(text);
 }
 
-// Add message to chat
+// タブ切り替え関数
+function changeTab(index) {
+  // すべてのタブからactiveクラスを削除
+  const tabs = document.querySelectorAll('.financial-tab-item');
+  tabs.forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  // クリックされたタブにactiveクラスを追加
+  tabs[index].classList.add('active');
+}
+
+// Add message to chat - LINE/WhatsAppスタイルのチャット
 function appendMessage(role, text) {
   const timestamp = formatTimestamp();
-
   const messageDiv = document.createElement('div');
-  messageDiv.className = `message ${role === 'user' ? 'user' : 'bot'}`;
-
-  // Create avatar
-  const avatarDiv = document.createElement('div');
-  avatarDiv.className = 'avatar';
-  const avatarIcon = document.createElement('i');
 
   if (role === 'user') {
+    messageDiv.className = 'message user';
+
+    // ユーザーアバター
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'avatar';
+    const avatarIcon = document.createElement('i');
     avatarIcon.className = 'fas fa-user';
+    avatarDiv.appendChild(avatarIcon);
+
+    // メッセージコンテンツ
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = text;
+
+    // タイムスタンプ
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'timestamp';
+    timeSpan.textContent = timestamp;
+    contentDiv.appendChild(timeSpan);
+
+    // メッセージの組み立て
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(contentDiv);
   } else {
+    messageDiv.className = 'message bot';
+
+    // AIアバター
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'avatar';
+    const avatarIcon = document.createElement('i');
     avatarIcon.className = 'fas fa-robot';
-  }
+    avatarDiv.appendChild(avatarIcon);
 
-  avatarDiv.appendChild(avatarIcon);
+    // メッセージコンテンツ
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
 
-  // Create message content
-  const contentDiv = document.createElement('div');
-  contentDiv.className = 'message-content';
+    // AIメッセージの場合はマークダウンをサポート
+    if (text.includes('**')) {
+      // マークダウンを含む場合
+      const contentInner = document.createElement('div');
+      contentInner.className = 'markdown-content';
+      contentInner.innerHTML = renderMarkdown(text);
 
-  const messagePara = document.createElement('div');
-  messagePara.className = 'markdown-content';
+      // コードブロックがあれば、highlight.jsを適用
+      if (hljs) {
+        contentInner.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+      }
 
-  // ユーザーの場合はマークダウンパースせず、AIの場合はマークダウンパース
-  if (role === 'user') {
-    messagePara.textContent = text;
-  } else {
-    // マークダウンをHTMLに変換
-    messagePara.innerHTML = renderMarkdown(text);
+      contentDiv.appendChild(contentInner);
+    } else {
+      // マークダウンがない場合は段落に分ける
+      const paragraphs = text.split('\n\n');
 
-    // コードブロックがあれば、highlight.jsを適用
-    if (hljs) {
-      messagePara.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
+      for (const paragraph of paragraphs) {
+        if (paragraph.trim()) {
+          const p = document.createElement('p');
+          p.textContent = paragraph;
+          contentDiv.appendChild(p);
+        }
+      }
     }
+
+    // タイムスタンプ
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'timestamp';
+    timeSpan.textContent = timestamp;
+    contentDiv.appendChild(timeSpan);
+
+    // メッセージの組み立て
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(contentDiv);
   }
-
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'timestamp';
-  timeSpan.textContent = timestamp;
-
-  contentDiv.appendChild(messagePara);
-  contentDiv.appendChild(timeSpan);
-
-  // Assemble message
-  messageDiv.appendChild(avatarDiv);
-  messageDiv.appendChild(contentDiv);
 
   // Add to chat
   chatBox.appendChild(messageDiv);
@@ -194,6 +235,54 @@ async function send() {
   }
 }
 
+// プリセットメッセージを送信する機能
+function sendPresetMessage(message) {
+  // プリセットメッセージをチャットボックスに追加
+  appendMessage('user', message);
+
+  // 入力フィールドをクリア
+  inputField.value = '';
+
+  // タイピングインジケータを表示
+  const typingIndicator = showTyping();
+
+  // サーバーへ送信
+  fetch('/chat', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: message })
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // タイピングインジケータを削除
+      removeTypingIndicator();
+
+      // AIの応答をチャットボックスに追加
+      appendMessage('ai', data.response);
+
+      // プロンプト名の更新（サーバーから返ってきた場合）
+      if (data.prompt_name) {
+        promptNameElement.textContent = data.prompt_name;
+        // セッションストレージに保存
+        sessionStorage.setItem('selectedPromptName', data.prompt_name);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      removeTypingIndicator();
+      appendMessage('ai', 'すみません、エラーが発生しました。もう一度お試しください。');
+    });
+
+  // チャットボックスを一番下までスクロール
+  scrollToBottom();
+}
+
 // Clear chat history
 async function clearChat() {
   if (!confirm('チャット履歴をクリアしますか？')) return;
@@ -206,7 +295,7 @@ async function clearChat() {
     chatBox.innerHTML = '';
 
     // Add welcome message
-    appendMessage('ai', 'こんにちは！Zeals.AIです！意思決定のサポートについて、お手伝いします。');
+    appendMessage('ai', 'こんにちは！Financial Supporter AIです。資産運用やライフプランニングについてお手伝いします。どのようなことでもお気軽にご相談ください。');
 
   } catch (error) {
     console.error('Error clearing chat:', error);

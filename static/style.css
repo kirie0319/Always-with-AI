@@ -1,94 +1,476 @@
 :root {
-  --primary-color: #ff4757;
-  --secondary-color: #ff6b81;
-  --accent-color: #5352ed;
-  --dark-color: #2f3542;
-  --light-color: #f1f2f6;
-  --success-color: #2ed573;
-  --text-color: #333;
-  --bot-bg: #f1f2f6;
-  --user-bg: #5352ed;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --border-radius: 12px;
-  --transition: all 0.3s ease;
+  --financial-primary: #F6A650;
+  --financial-text: #333333;
+  --financial-light-bg: #f5f5f5;
+  --financial-white: #ffffff;
+  --financial-border: #e0e0e0;
+  --financial-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --financial-radius: 8px;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-body {
   font-family: 'Noto Sans JP', sans-serif;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  color: var(--text-color);
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
 }
 
-.chat-container {
-  width: 100%;
-  max-width: 800px;
-  height: 90vh;
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
+html,
+body {
+  height: 100%;
   overflow: hidden;
 }
 
+body {
+  background-color: var(--financial-light-bg);
+  color: var(--financial-text);
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--financial-light-bg);
+  width: 100%;
+}
+
+/* ヘッダー */
 .chat-header {
-  padding: 20px;
-  background: var(--primary-color);
-  color: white;
-  text-align: center;
+  background: var(--financial-white);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--financial-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 5px;
 }
 
 .logo i {
-  font-size: 1.8rem;
+  color: var(--financial-primary);
+  font-size: 20px;
+  margin-right: 10px;
 }
 
 .logo h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--financial-text);
 }
 
-.logo span {
-  color: var(--light-color);
+.accent-letter {
+  color: var(--financial-primary);
 }
 
 .tagline {
-  font-size: 0.9rem;
+  color: var(--financial-text);
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+/* ナビゲーションボタン */
+.navigation-button-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  background: var(--financial-white);
+  border-bottom: 1px solid var(--financial-border);
+}
+
+.nav-btn {
+  background-color: var(--financial-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn i {
+  margin-right: 6px;
+}
+
+.nav-btn:hover {
   opacity: 0.9;
 }
 
+/* 選択中のプロンプト表示エリア */
+.active-prompt {
+  background: var(--financial-white);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  border-left: 4px solid var(--financial-primary);
+  margin-bottom: 8px;
+}
+
+.active-prompt-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin-right: 10px;
+}
+
+.active-prompt-label i {
+  color: var(--financial-primary);
+  margin-right: 6px;
+}
+
+.active-prompt-name {
+  font-weight: 500;
+}
+
+/* メインコンテンツ */
+.financial-main-content {
+  display: flex;
+  margin: 0 8px 8px;
+  border-radius: var(--financial-radius);
+  overflow: hidden;
+  flex: 1;
+  height: calc(100% - 130px);
+  /* ヘッダーとナビとプロンプト分を引く */
+}
+
+/* 左側：フォームエリア */
+.financial-form-container {
+  width: 50%;
+  background-color: var(--financial-white);
+  border-right: 1px solid var(--financial-border);
+  overflow-y: auto;
+}
+
+/* タブナビゲーション */
+.financial-tab-navigation {
+  display: flex;
+  background: #f1f1f1;
+  position: sticky;
+  border-radius: 4px;
+  padding: 0.5%;
+  margin: 1%;
+  top: 0;
+  z-index: 10;
+}
+
+.financial-tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 2% 1.5%;
+  font-weight: 500;
+  color: #777;
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.financial-tab-item.active {
+  background-color: var(--financial-white);
+  color: var(--financial-primary);
+  box-shadow: var(--financial-shadow);
+  padding: 2% 1.5%;
+}
+
+.financial-tab-item:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* タブコンテンツ */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ステップコンテナ */
+.financial-step-container {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.financial-step-container.hidden {
+  display: none;
+}
+
+.financial-step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: solid #DCDCDC;
+}
+
+.financial-step-number {
+  color: var(--financial-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.financial-step-title {
+  font-weight: 700;
+  color: var(--financial-text);
+  font-size: 16px;
+}
+
+.financial-step-content {
+  padding-left: 40px;
+}
+
+.financial-instruction {
+  font-size: 13px;
+  margin-bottom: 16px;
+  color: var(--financial-text);
+  font-weight: bold;
+}
+
+.financial-input-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.financial-input-row-label {
+  width: 100px;
+  font-size: 13px;
+  color: var(--financial-text);
+  font-weight: bold;
+}
+
+.financial-input-row input,
+.financial-input-row select {
+  flex: none;
+  max-width: 250px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 35%;
+}
+
+.financial-input-row span {
+  margin-left: 8px;
+  font-size: 13px;
+  color: var(--financial-text);
+}
+
+/* ボタングループ */
+.financial-button-group {
+  display: flex;
+  gap: 8px;
+  width: 70%;
+}
+
+.financial-option-button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.financial-option-button.active {
+  background-color: var(--financial-primary);
+  color: white;
+  border-color: var(--financial-primary);
+}
+
+.financial-button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.first-financial-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.financial-action-button {
+  background-color: var(--financial-primary);
+  color: white;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 #e08e30;
+  transition: all 0.1s ease;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 0;
+}
+
+.financial-action-button:hover {
+  background-color: #e08e30;
+}
+
+.financial-action-button:active {
+  top: 4px;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+  background-color: #d08020;
+}
+
+.financial-secondary-button {
+  background-color: #f1f2f6;
+  color: var(--financial-text);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.1s ease;
+}
+
+.financial-secondary-button:hover {
+  background-color: #e1e4e8;
+}
+
+/* セクションコンテナ */
+.financial-section-container {
+  border: 1px solid var(--financial-border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.financial-section-title {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--financial-primary);
+}
+
+/* 家族情報 */
+.financial-family-info {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--financial-border);
+  border-radius: 6px;
+}
+
+.family-member {
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+/* 投資情報アイテム */
+.investment-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--financial-border);
+}
+
+/* ローン情報アイテム */
+.loan-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--financial-border);
+}
+
+.school-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--financial-border);
+}
+
+/* 追加ボタン */
+.financial-add-button {
+  width: 100%;
+  padding: 8px;
+  background-color: #f0f0f0;
+  border: none;
+  color: var(--financial-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.financial-add-button:hover {
+  background-color: #e9ecef;
+}
+
+/* 開発中メッセージ */
+.development-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  height: 100%;
+}
+
+.development-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #ccc;
+}
+
+.development-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--financial-text);
+}
+
+.development-description {
+  font-size: 14px;
+  color: #666;
+  max-width: 400px;
+  margin-bottom: 24px;
+}
+
+/* 右側：レスポンスエリア */
+.financial-response-container {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--financial-light-bg);
+  height: 100%;
+}
+
+/* チャットメッセージ表示エリア */
 .chat-messages {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  margin-bottom: 0;
+  height: calc(100% - 140px);
+  /* チャットインターフェースと入力フォームの高さを引く */
 }
 
+/* チャットメッセージスタイル - 吹き出しスタイル */
 .message {
   display: flex;
   gap: 12px;
   max-width: 85%;
+  margin-bottom: 16px;
   animation: fadeIn 0.3s ease;
+  position: relative;
 }
 
 .message.user {
@@ -100,34 +482,68 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--accent-color);
   display: flex;
   justify-content: center;
   align-items: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message.bot .avatar {
+  background: var(--financial-primary);
 }
 
 .message.user .avatar {
-  background: var(--primary-color);
+  background: #4a6da7;
 }
 
 .message-content {
   padding: 12px 16px;
-  border-radius: var(--border-radius);
+  border-radius: var(--financial-radius);
   position: relative;
-  background: var(--bot-bg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 吹き出しの三角形部分 */
+.message.bot .message-content:before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 15px;
+  border-top: 8px solid transparent;
+  border-right: 10px solid var(--financial-white);
+  border-bottom: 8px solid transparent;
+}
+
+.message.user .message-content:before {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 15px;
+  border-top: 8px solid transparent;
+  border-left: 10px solid var(--financial-primary);
+  border-bottom: 8px solid transparent;
+}
+
+.message.bot .message-content {
+  background: var(--financial-white);
+  color: var(--financial-text);
 }
 
 .message.user .message-content {
-  background: var(--user-bg);
+  background: var(--financial-primary);
   color: white;
 }
 
 .message p {
-  margin-bottom: 4px;
-  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.message p:last-child {
+  margin-bottom: 0;
 }
 
 .timestamp {
@@ -135,66 +551,133 @@ body {
   opacity: 0.7;
   display: block;
   text-align: right;
+  margin-top: 4px;
 }
 
-.chat-input {
+/* 以前の.ai-messageと.user-messageをサポートするための後方互換性 */
+.ai-message {
+  background: var(--financial-white);
+  border-radius: var(--financial-radius);
   padding: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  margin-bottom: 16px;
+  font-size: 14px;
+  position: relative;
+}
+
+.user-message {
+  margin-left: auto;
+  max-width: 80%;
+  background-color: var(--financial-primary);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.ai-message p,
+.user-message p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ai-message p:last-child,
+.user-message p:last-child {
+  margin-bottom: 0;
+}
+
+.strategy-section {
+  margin-bottom: 12px;
+}
+
+.strategy-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* チャットインターフェース */
+.financial-chat-interface {
+  padding: 12px;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ai-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--financial-primary);
+  position: absolute;
+  top: -24px;
+  left: 16px;
+}
+
+.financial-message-container {
+  margin-left: auto;
+  position: relative;
+}
+
+.financial-message-button {
+  background-color: var(--financial-primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--financial-radius);
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  font-size: 13px;
+}
+
+.financial-message-button::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  bottom: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--financial-primary);
+  transform: rotate(45deg);
+}
+
+/* チャット入力 - 右側エリアに含める */
+.chat-input {
+  padding: 12px;
+  background-color: var(--financial-white);
+  border-top: 1px solid var(--financial-border);
+  margin-top: auto;
 }
 
 .input-container {
   display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-input[type="text"] {
+.input-container input {
   flex: 1;
-  padding: 12px 16px;
-  border: 2px solid #e1e4e8;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  transition: var(--transition);
-  font-family: 'Noto Sans JP', sans-serif;
+  padding: 10px;
+  border: 1px solid var(--financial-border);
+  border-radius: 4px;
+  font-size: 13px;
 }
 
-input[type="text"]:focus {
-  outline: none;
-  border-color: var(--accent-color);
-}
-
-button {
-  background: var(--accent-color);
+.input-container button {
+  background-color: var(--financial-primary);
   color: white;
   border: none;
-  border-radius: var(--border-radius);
-  padding: 12px 16px;
+  border-radius: 4px;
+  width: 40px;
+  margin-left: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
 }
 
-button:hover {
-  background: #4240d4;
-  transform: translateY(-2px);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-.secondary-btn {
-  background: var(--light-color);
-  color: var(--dark-color);
-}
-
-.secondary-btn:hover {
-  background: #e1e4e8;
+.input-container button:hover {
+  opacity: 0.9;
 }
 
 .actions {
@@ -202,13 +685,126 @@ button:active {
   justify-content: flex-end;
 }
 
-/* Typing indicator */
+.secondary-btn {
+  background-color: #f1f2f6;
+  color: var(--financial-text);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondary-btn i {
+  margin-right: 6px;
+}
+
+.secondary-btn:hover {
+  background-color: #e1e4e8;
+}
+
+/* マークダウン用のスタイル */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+}
+
+.markdown-content h4 {
+  font-size: 1.1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 2em;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.markdown-content li {
+  margin-bottom: 4px;
+}
+
+.markdown-content li>ul,
+.markdown-content li>ol {
+  margin-top: 4px;
+}
+
+.markdown-content a {
+  color: var(--financial-primary);
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--financial-primary);
+  padding-left: 16px;
+  color: #666;
+  margin: 16px 0;
+}
+
+.markdown-content pre {
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: auto;
+  margin: 16px 0;
+}
+
+.markdown-content code {
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9em;
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+
+/* タイピングインジケータ */
 .typing {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: var(--bot-bg);
+  background: var(--financial-white);
   border-radius: 16px;
   width: fit-content;
   margin-top: 4px;
@@ -217,7 +813,7 @@ button:active {
 .typing span {
   width: 8px;
   height: 8px;
-  background: var(--accent-color);
+  background: var(--financial-primary);
   border-radius: 50%;
   display: inline-block;
   animation: typingBounce 1.4s infinite ease-in-out both;
@@ -256,251 +852,30 @@ button:active {
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .chat-container {
-    height: 100vh;
-    border-radius: 0;
+/* 汎用ユーティリティクラス */
+.hidden {
+  display: none !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .financial-main-content {
+    flex-direction: column;
+    height: calc(100% - 130px);
   }
 
-  .message {
-    max-width: 90%;
-  }
-}
-/* 既存のstyle.cssに追加するマークダウン用スタイル */
-
-/* マークダウン全体のスタイル */
-.markdown-content {
-  line-height: 1.6;
-}
-
-/* 見出し */
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  margin-top: 16px;
-  margin-bottom: 8px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.markdown-content h1 {
-  font-size: 1.5em;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding-bottom: 0.3em;
-}
-
-.markdown-content h2 {
-  font-size: 1.3em;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding-bottom: 0.3em;
-}
-
-.markdown-content h3 {
-  font-size: 1.2em;
-}
-
-.markdown-content h4 {
-  font-size: 1.1em;
-}
-
-/* リスト */
-.markdown-content ul,
-.markdown-content ol {
-  padding-left: 2em;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.markdown-content li {
-  margin-bottom: 4px;
-}
-
-.markdown-content li>ul,
-.markdown-content li>ol {
-  margin-top: 4px;
-}
-
-/* テーブル */
-.markdown-content table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 16px 0;
-  overflow-x: auto;
-  display: block;
-}
-
-.markdown-content table th,
-.markdown-content table td {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-}
-
-.markdown-content table th {
-  background-color: #f8f8f8;
-  font-weight: 600;
-}
-
-.markdown-content tr:nth-child(even) {
-  background-color: #f8f8f8;
-}
-
-/* リンク */
-.markdown-content a {
-  color: var(--accent-color);
-  text-decoration: none;
-}
-
-.markdown-content a:hover {
-  text-decoration: underline;
-}
-
-/* 画像 */
-.markdown-content img {
-  max-width: 100%;
-  margin: 16px 0;
-  border-radius: 4px;
-}
-
-/* 引用 */
-.markdown-content blockquote {
-  border-left: 4px solid var(--accent-color);
-  padding-left: 16px;
-  color: #666;
-  margin: 16px 0;
-}
-
-/* コードブロック */
-.markdown-content pre {
-  background-color: #f6f8fa;
-  border-radius: 6px;
-  padding: 16px;
-  overflow: auto;
-  margin: 16px 0;
-}
-
-.markdown-content code {
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.9em;
-  background-color: rgba(0, 0, 0, 0.04);
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-}
-
-.markdown-content pre code {
-  background-color: transparent;
-  padding: 0;
-  border-radius: 0;
-  font-size: 0.9em;
-  line-height: 1.45;
-}
-
-/* 水平線 */
-.markdown-content hr {
-  height: 1px;
-  background-color: #ddd;
-  border: none;
-  margin: 24px 0;
-}
-
-/* 段落 */
-.markdown-content p {
-  margin-bottom: 16px;
-}
-
-/* チェックボックス */
-.markdown-content input[type="checkbox"] {
-  margin-right: 0.5em;
-}
-
-/* AIのメッセージ内のマークダウンコンテンツ内での色調整 */
-.message.bot .markdown-content {
-  color: var(--text-color);
-}
-
-.message.user .markdown-content {
-  color: white;
-}
-
-/* マークダウン内のコード表示を調整（特に暗い背景のユーザーメッセージの場合） */
-.message.user .markdown-content code {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-/* モバイル対応 */
-@media (max-width: 600px) {
-  .markdown-content table {
-    font-size: 0.9em;
+  .financial-form-container,
+  .financial-response-container {
+    width: 100%;
+    height: 50%;
   }
 
-  .markdown-content pre {
-    padding: 12px;
+  .financial-form-container {
+    border-right: none;
+    border-bottom: 1px solid var(--financial-border);
+  }
+
+  .chat-messages {
+    height: calc(100% - 120px);
   }
 }
-
-.navigation-button-container {
-  text-align: center;
-  margin: 12px 0;
-}
-
-.nav-btn {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: var(--success-color);
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  box-shadow: var(--shadow);
-}
-
-.nav-btn:hover {
-  background-color: #28c96e;
-  /* hover時ちょっと濃く */
-  transform: translateY(-2px);
-}
-/* 現在のプロンプト表示エリア用のスタイル */
-.active-prompt {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: var(--border-radius);
-  padding: 10px 15px;
-  margin: 10px 16px;
-  display: flex;
-  align-items: center;
-  border-left: 4px solid var(--accent-color);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.active-prompt-label {
-  display: flex;
-  align-items: center;
-  color: var(--dark-color);
-  font-weight: 500;
-  margin-right: 10px;
-}
-
-.active-prompt-label i {
-  color: var(--accent-color);
-  margin-right: 6px;
-}
-
-.active-prompt-name {
-  font-weight: 700;
-  color: var(--dark-color);
-}
-
-/* ナビゲーションボタンのスタイル調整 */
-.navigation-button-container {
-  display: flex;
-  gap: 10px;
-  padding: 0 16px;
-  margin: 12px 0;
-  justify-content: center;
-}
-
-/* 既存のナビゲーションボタンのスタイルがあるため追加は不要 */

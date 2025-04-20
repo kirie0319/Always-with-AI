@@ -8,3 +8,16 @@ flask_sqlalchemy
 flask_migrate
 gunicorn
 colorama
+flask_jwt_extended
+werkzeug
+celery
+redis
+uvicorn
+fastapi
+jinja2
+python-multipart
+itsdangerous
+aiofiles
+starlette
+asyncpg
+greenlet

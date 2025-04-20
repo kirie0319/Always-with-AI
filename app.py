@@ -1,20 +1,14 @@
+# app.py
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, Response
 from flask_migrate import Migrate 
 from openai import OpenAI
 from dotenv import load_dotenv
-import os
-import anthropic
 from datetime import datetime
 from models import db, Prompt 
-import json
-import uuid
-import threading
-import yaml
-import traceback
-import sys
-import time 
+import json, uuid, threading, yaml, traceback, sys, time, config, os, anthropic
 from colorama import Fore, Style, init 
-import config
+from tasks import generate_summary_task
+from utils import load_json, save_json, to_pretty_json, get_last_conversation_pair
 
 load_dotenv()
 
@@ -38,20 +32,6 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 db.init_app(app)
 migrate = Migrate(app, db)
 
-def load_json(filepath, default):
-  try:
-    with open(filepath, "r") as f:
-      return json.load(f)
-  except (FileNotFoundError, json.JSONDecodeError):
-    return default
-
-def to_pretty_json(data):
-    return json.dumps(data, ensure_ascii=False, indent=2)
-
-def save_json(filepath, data):
-  with open(filepath, "w") as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-
 def get_user_id(user_identifier):
   user_history = load_json(config.USER_HISTORY_FILE, {})
 
@@ -67,19 +47,6 @@ def get_user_id(user_identifier):
     save_json(config.USER_HISTORY_FILE, user_history)
 
   return user_history[user_identifier]["user_id"]
-
-def get_last_conversation_pair():
-  history = load_json(config.CHAT_LOG_FILE, [])
-  if len(history) < 2:
-    return None
-  
-  for i in range(len(history) -2, -1, -1):
-    if history[i]["role"] == "user" and history[i +1]["role"] == "assistant":
-      return {
-        "user": history[i],
-        "assistant": history[i +1]
-      }
-  return None
 
 def update_user_messages(user_identifier, message_pair):
   user_history = load_json(config.USER_HISTORY_FILE, {})
@@ -109,75 +76,6 @@ def update_user_messages(user_identifier, message_pair):
     user_history[user_identifier]["messages"] = user_history[user_identifier]["messages"][-MAX_RALLIES:]
 
   save_json(config.USER_HISTORY_FILE, user_history)
-
-def generate_summary_in_background(history_json):
-  last_pair = get_last_conversation_pair()
-  if last_pair:
-    last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
-  else:
-    last_two_json = "会話履歴が見つかりませんでした。"
-  try:
-    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-    anthropic_client = anthropic.Anthropic(
-      api_key=anthropic_api_key,
-    )
-    user_history = load_json("user_history.json", {})
-    user_history_json = to_pretty_json(user_history)
-    summary = load_json("chatsummary.json", [])
-    summary_json = to_pretty_json(summary)
-    summarizing_prompt = summarizing_prompt = f"""You are an expert conversation summarizer.
-
-    Your task is to analyze and summarize a JSON-formatted chat history between a user and an AI assistant. The goal is to extract key details and provide a clear, structured summary of the conversation.
-
-    Use the following output format:
-
-    ---
-
-    ### Chat Summary
-
-    #### 1. **Overview**
-    Briefly describe the overall context of the conversation, the participants, and the tone.
-
-    #### 2. **Key Points**
-    List 5-7 bullet points that highlight the most important facts, insights, or decisions discussed during the conversation.
-
-    #### 3. **Topic Timeline** (optional)
-    If applicable, outline the main topics discussed in chronological order.
-
-    #### 4. **Follow-up Items**
-    List any remaining questions, action items, or topics that could be explored further.
-
-    #### 5. **Context Notes**
-    Mention any relevant background, such as the fictional setting, tone of the assistant, or relationship between participants.
-
-    ---
-
-    Focus on clarity and usefulness. If the conversation is based on a fictional character (e.g., anime, games), preserve the tone and role-playing context in your summary.
-
-    Now, here is the summary of this conversation:
-    {summary_json}
-
-    And also here is the conversation history with users that is last 7 rallies:
-    {user_history_json}
-
-    And this is the last conversation with users:
-    {last_two_json}
-    """
-
-    anthropic_summary = anthropic_client.messages.create(
-      model="claude-3-7-sonnet-20250219",
-      max_tokens=4000,
-      messages=[
-        {"role": "user", "content": summarizing_prompt}
-      ]
-    )
-    summary = [{"role": "developer", "content": anthropic_summary.content[0].text}]
-    save_json(config.SUMMARY_FILE, summary)
-    print("Summary generated successfully")
-  except Exception as e:
-    print(f"Error generating summary: {e}")
-
-### new version
 
 def stream_response(user_input):
   max_retries = 5
@@ -213,158 +111,9 @@ def stream_response(user_input):
         print(f"\n{Fore.RED}エラーが発生しました: {e}{Style.RESET_ALL}\n")
         return
 
-### new version
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
-# @app.route("/chat", methods=["POST"])
-# def chat():
-#   try:
-#     last_pair = get_last_conversation_pair()
-#     if last_pair:
-#       last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
-#     else:
-#       last_two_json = "会話履歴が見つかりませんでした。"
-#     user_identifier = request.remote_addr
-#     user_id = get_user_id(user_identifier)
-#     history = load_json("chat_log.json", [])
-#     history_json = to_pretty_json(history)
-
-#     summary = load_json("chatsummary.json", [])
-#     summary_json = to_pretty_json(summary)
-
-#     user_history = load_json("user_history.json", {})
-#     user_history_json = to_pretty_json(user_history)
-
-#     data = request.get_json()
-#     user_input = data.get("message", "")
-#     print(f"User input: {user_input[:50]}...")
-
-#     user_message = {
-#         "role": "user", 
-#         "content": user_input, 
-#         "user_id": user_id,
-#         "timestamp": datetime.now().isoformat()
-#     }
-#     history.append(user_message)
-#     selected_prompt_id = session.get("selected_prompt_id")
-#     print(selected_prompt_id)
-#     base_prompt = "you are helpful AI assistant"
-#     if selected_prompt_id:
-#       prompt_obj = Prompt.query.filter_by(id=selected_prompt_id).first()
-#       if prompt_obj:
-#         print(f"Found prompt: {prompt_obj.name}")
-#         base_prompt = prompt_obj.content
-#       else:
-#         print("Prompt object not found for ID:", selected_prompt_id)
-    
-
-#       print("Calling Anthropic API...")
-#       prompt = f"""
-#       {base_prompt}
-
-#       ---
-#       ###Summary fo conversation
-#       {summary_json}
-#       ###Recent conversation with users
-#       {user_history_json}
-#       ###Last conversation with users
-#       {last_two_json}
-#       """
-#       print(prompt)
-
-#       try:
-#         resp = anthropic_client.messages.create(
-#           model="claude-3-7-sonnet-20250219",
-#           max_tokens=8000,
-#           system=prompt,
-#           messages=[
-#             {"role": "user", "content": user_input}
-#           ]
-#         )
-#       except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-#     assistant_text = resp.content[0].text
-  
-#     assistant_message = {
-#         "role": "assistant", 
-#         "content": assistant_text, 
-#         "user_id": user_id,
-#         "id": str(uuid.uuid4()),  # Adding message ID like in the second code
-#         "timestamp": datetime.now().isoformat()
-#     }
-#     history.append(assistant_message)
-#     save_json(config.CHAT_LOG_FILE, history)
-
-#     try:
-#       summarize_user_history = anthropic_client.messages.create(
-#         model="claude-3-haiku-20240307",
-#         max_tokens=2048,
-#         system="""You are an expert conversation summarizer.
-
-#     Your task is to analyze and summarize response of AI assistant. The goal is to extract key details and provide a clear, short, structured summary of the conversation.
-
-#     Use the following output format:
-
-#     ---
-
-#     ### Chat Summary
-
-#     #### 1. **Overview**
-#     Briefly describe the overall context of the conversation, the participants, and the tone.
-
-#     #### 2. **Key Points**
-#     List 5-7 bullet points that highlight the most important facts, insights, or decisions discussed during the conversation.
-
-#     #### 3. **Topic Timeline** (optional)
-#     If applicable, outline the main topics discussed in chronological order.
-
-#     #### 4. **Follow-up Items**
-#     List any remaining questions, action items, or topics that could be explored further.
-
-#     #### 5. **Context Notes**
-#     Mention any relevant background, such as the fictional setting, tone of the assistant, or relationship between participants.
-
-#     ---
-#     """,
-#         messages=[
-#           {"role": "user", "content": assistant_text}
-#         ]
-#       )
-#     except Exception as e:
-#       return jsonify({"error": str(e)}), 500
-#     assistant_summary_message = {
-#         "role": "assistant", 
-#         "content": summarize_user_history.content[0].text, 
-#         "user_id": user_id,
-#         "id": str(uuid.uuid4()),  # Adding message ID like in the second code
-#         "timestamp": datetime.now().isoformat()
-#     }
-
-#     message_pair = {
-#         "user": user_message,
-#         "assistant": assistant_summary_message,
-#         "timestamp": datetime.now().isoformat()
-#     }
-#     update_user_messages(user_identifier, message_pair)
-
-#     if len(history) % 7 == 0:
-#       threading.Thread(
-#         target=generate_summary_in_background,
-#         args=(history_json,)
-#       ).start()
-
-#     return jsonify({
-#         "response": assistant_text,
-#         "timestamp": datetime.now().isoformat()
-#     })
-#   except Exception as e:
-#     error_details = traceback.format_exc()
-#     print(f"Error in/chat: {str(e)}\n{error_details}")
-#     return jsonify({"error": str(e), "details": error_details}), 500
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -423,11 +172,11 @@ def chat():
       ###Last conversation with users
       {last_two_json}
       """
-      print(prompt)
+
 
       def generate():
         resp = ""
-        retry_count = 0  # これはローカル変数として定義する必要があります
+        retry_count = 0
         backoff_time = 1
         try:
           with anthropic_client.messages.stream(
@@ -505,11 +254,8 @@ def chat():
           }
           update_user_messages(user_identifier, message_pair)
 
-          if len(history) % 7 == 0:
-            threading.Thread(
-              target=generate_summary_in_background,
-              args=(history_json,)
-            ).start()
+          if len(history) % 1 == 0:
+            generate_summary_task.delay(history_json)
         except anthropic.APIStatusError as e:
           if hasattr(e, '_status_code') and e._status_code == 429 or 'overloaded_error' in str(e):
             retry_count += 1
@@ -639,6 +385,6 @@ def select_prompt_api():
   })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    # port = int(os.environ.get('PORT', 5001))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port)

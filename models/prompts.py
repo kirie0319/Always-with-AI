@@ -1,14 +1,13 @@
 # models/prompts.py
-from flask_sqlalchemy import SQLAlchemy 
+from sqlalchemy import Column, Integer, String, Text, DateTime 
 from datetime import datetime
+from database import Base 
 
-db = SQLAlchemy()
-
-class Prompt(db.Model):
+class Prompt(Base):
   __tablename__ = 'prompts'
 
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String, nullable=False, unique=True)
-  content = db.Column(db.Text, nullable=False)
-  description = db.Column(db.String, nullable=True)
-  updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+  id = Column(Integer, primary_key=True)
+  name = Column(String, nullable=False, unique=True)
+  content = Column(Text, nullable=False)
+  description = Column(String, nullable=True)
+  updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

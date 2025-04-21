@@ -37,6 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('access_token');
+  return token ? {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  } : {
+    'Content-Type': 'application/json'
+  };
+}
+
 // Format timestamp
 function formatTimestamp() {
   const now = new Date();
@@ -244,9 +254,7 @@ async function send() {
     // POSTリクエスト
     const response = await fetch('/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ message: text })
     });
 
@@ -424,7 +432,10 @@ async function clearChat() {
   if (!confirm('チャット履歴をクリアしますか？')) return;
 
   try {
-    const res = await fetch('/clear', { method: 'POST' });
+    const res = await fetch('/clear', {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
     const data = await res.json();
 
     // Clear UI

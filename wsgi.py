@@ -1,19 +1,31 @@
 # wsgi.py
-from fastapi import FastAPI, Request, HTTPException, Depends, Response, BackgroundTasks
-from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
+from fastapi import FastAPI, Request, HTTPException, Depends, Response, BackgroundTasks, status, Form 
+from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles 
+from fastapi.security import OAuth2PasswordRequestForm
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from dotenv import load_dotenv
-from datetime import datetime
-from models import Prompt
+from datetime import datetime, timedelta
 import json, uuid, threading, yaml, traceback, sys, time, config, os, anthropic, aiofiles, asyncio
 from colorama import Fore, Style, init 
 from tasks import generate_summary_task
 from contextlib import asynccontextmanager
+from openai import OpenAI
+from database import get_db, engine 
+from models.users import User
+from models.prompts import Prompt 
+from auth.jwt_auth import (
+  create_access_token,
+  get_current_user,
+  ACCESS_TOKEN_EXPIRE_MINUTES
+)
+
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
 load_dotenv()
 
@@ -22,11 +34,20 @@ YAML_PATH = "prompts/specific/finance.yaml"
 MAX_TOKENS_INPUT  = 8_000   # Claude に渡す入力上限
 MAX_TOKENS_OUTPUT = 512     # 期待する出力上限
 SAFETY_MARGIN     = 500     # header 系を見込んだ余白
+OPENROUTER_MODELS = [
+  "anthropic/claude-3.7-sonnet"
+]
 
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 
 anthropic_client = anthropic.Anthropic(
   api_key=anthropic_api_key,
+)
+
+openrouter_client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=openrouter_api_key
 )
 
 @asynccontextmanager
@@ -72,19 +93,6 @@ async def save_json(filepath, data):
 async def to_pretty_json(data):
   return json.dumps(data, ensure_ascii=False, indent=2)
 
-async def get_last_conversation_pair():
-  history = await load_json(config.CHAT_LOG_FILE, [])
-  if len(history) < 2:
-    return None
-  
-  for i in range(len(history) - 2, -1, -1):
-    if history[i]["role"] == "user" and history[i + 1]["role"] == "assistant":
-      return {
-        "user": history[i],
-        "assistant": history[i + 1]
-      }
-  return None
-
 async def get_user_id(user_identifier):
   user_history = await load_json(config.USER_HISTORY_FILE, {})
 
@@ -101,34 +109,90 @@ async def get_user_id(user_identifier):
 
   return user_history[user_identifier]["user_id"]
 
-async def update_user_messages(user_identifier, message_pair):
-  user_history = await load_json(config.USER_HISTORY_FILE, {})
-  history = await load_json(config.CHAT_LOG_FILE, [])
+# async def update_user_messages(user_identifier, message_pair):
+#   user_history = await load_json(config.USER_HISTORY_FILE, {})
+#   history = await load_json(config.CHAT_LOG_FILE, [])
 
-  if user_history is None or isinstance(user_history, list):
-    user_history = {}
+#   if user_history is None or isinstance(user_history, list):
+#     user_history = {}
 
-  if user_identifier not in user_history:
-    await get_user_id(user_identifier)
-    user_history = await load_json(config.USER_HISTORY_FILE, {})
+#   if user_identifier not in user_history:
+#     await get_user_id(user_identifier)
+#     user_history = await load_json(config.USER_HISTORY_FILE, {})
 
-    if user_history is None or isinstance(user_history, list):
-      user_history = {}
-      user_history[user_identifier] = {
-        "user_id": str(uuid.uuid4()),
-        "created_at": datetime.now().isoformat(),
-        "messages": []
+#     if user_history is None or isinstance(user_history, list):
+#       user_history = {}
+#       user_history[user_identifier] = {
+#         "user_id": str(uuid.uuid4()),
+#         "created_at": datetime.now().isoformat(),
+#         "messages": []
+#       }
+#   if "messages" not in user_history[user_identifier]:
+#     user_history[user_identifier]["messages"] = []
+
+#   if len(history) > 2:
+#     user_history[user_identifier]["messages"].append(history[-4:-2])
+
+#   if len(user_history[user_identifier]["messages"]) > MAX_RALLIES:
+#     user_history[user_identifier]["messages"] = user_history[user_identifier]["messages"][-MAX_RALLIES:]
+
+#   await save_json(config.USER_HISTORY_FILE, user_history)
+
+async def get_user_files(user_id):
+  return {
+    "chat_log": f"data/chat_log_{user_id}.json",
+    "summary": f"data/summary_{user_id}.json",
+    "user_history": f"data/user_history_{user_id}.json"
+  }
+
+CHATROOM_FILE = "data/chatroom.json"
+
+async def get_or_create_chatroom(user_id):
+  chatrooms = await load_json(CHATROOM_FILE, {})
+
+  if user_id not in chatrooms:
+    user_files = await get_user_files(user_id)
+    await save_json(user_files["chat_log"], [])
+    await save_json(user_files["summary"], [])
+    await save_json(user_files["user_history"], {})
+
+    chatrooms[user_id] = {
+      "created_ai": datetime.now().isoformat(),
+      "files": user_files
+    }
+    await save_json(CHATROOM_FILE, chatrooms)
+  return chatrooms[user_id]
+
+async def get_last_conversation_pair(user_id):
+  chatroom = await get_or_create_chatroom(user_id)
+  history = await load_json(chatroom["files"]["chat_log"], [])
+  if len(history) < 2:
+    return None
+  for i in range(len(history) - 2, -1, -1):
+    if history[i]["role"] == "user" and history[i + 1]["role"] == "assistant":
+      return {
+        "user": history[i],
+        "assistant": history[i + 1]
       }
-  if "messages" not in user_history[user_identifier]:
-    user_history[user_identifier]["messages"] = []
+  return None 
 
+async def update_user_messages(user_id, message_pair):
+  chatroom = await get_or_create_chatroom(user_id)
+  user_history = await load_json(chatroom["files"]["user_history"], {})
+  history = await load_json(chatroom["files"]["chat_log"], [])
+
+  if user_id not in user_history:
+    user_history[user_id] = {
+      "created_at": datetime.now().isoformat(),
+      "messages": []
+    }
+  if "messages" not in user_history[user_id]:
+    user_history[user_id]["messages"] = []
   if len(history) > 2:
-    user_history[user_identifier]["messages"].append(history[-4:-2])
-
-  if len(user_history[user_identifier]["messages"]) > MAX_RALLIES:
-    user_history[user_identifier]["messages"] = user_history[user_identifier]["messages"][-MAX_RALLIES:]
-
-  await save_json(config.USER_HISTORY_FILE, user_history)
+    user_history[user_id]["messages"].append(history[-4:-2])
+  if len(user_history[user_id]["messages"]) > MAX_RALLIES:
+    user_history[user_id]["messages"] = user_history[user_id]["messages"][-MAX_RALLIES:]
+  await save_json(chatroom["files"]["user_history"], user_history)
 
 async def stream_anthropic_response(user_input, system_prompt):
   max_retries = 5
@@ -166,30 +230,230 @@ async def stream_anthropic_response(user_input, system_prompt):
         yield json.dumps({"error": str(e)})
         break
 
+async def stream_openrouter_response(user_input, system_prompt):
+  max_retries = 5
+  retry_count = 0
+  backoff_time = 1
+  while retry_count < max_retries:
+    try:
+      stream = openrouter_client.chat.completions.create(
+        model="anthropic/claude-3.7-sonnet",
+        messages=[
+          {"role": "system", "content": system_prompt},
+          {"role": "user", "content": user_input} 
+        ],
+        max_tokens=4000,
+        stream=True
+      )
+
+      assistant_response = ""
+      print(f"\n{Fore.BLUE}Claude:{Style.RESET_ALL}", end="")
+
+      async for chunk in stream:
+        delta = chunk.choices[0].delta 
+        if delta and delta.content:
+          print(delta.content, end="", flush=True)
+          assistant_response += delta.content 
+          yield delta.content
+      break 
+    except Exception as e:
+      if "429" in str(e).lower() or "overload" in str(e).lower():
+        retry_count += 1
+        if retry_count < max_retries:
+          print(f"\n{Fore.YELLOW}APIが混雑しています。{backoff_time}秒後に再試行します...{Style.RESET_ALL}")
+          await asyncio.sleep(backoff_time)
+          backoff_time *= 2
+          print(f"\n{Fore.BLUE}Claude:{Style.RESET_ALL} ", end="")
+        else:
+          print(f"\n{Fore.RED}APIが混雑しているため、リクエストを完了できませんでした。{Style.RESET_ALL}\n")
+          yield json.dumps({"error": "APIが混雑しています。時間をおいて再度お試しください。"})
+      else:
+        print(f"\n{Fore.RED}エラーが発生しました: {e}{Style.RESET_ALL}\n")
+        yield json.dumps({"error": str(e)})
+        break
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+  return templates.TemplateResponse("login.html", {"request": request})
+
+# @app.get(
+#   "/register", response_class=HTMLResponse)
+# async def register_page(
+#   request: Request
+# ):
+#   return templates.TemplateResponse("register.html", {"request": request})
+@app.post("/register")
+async def register_user(
+  username: str = Form(...),
+  email: str = Form(...),
+  password: str = Form(...),
+  db: AsyncSession = Depends(get_db)
+):
+  stmt = select(User).where(User.email == email)
+  result = await db.execute(stmt)
+  if result.scalar_one_or_none():
+    raise HTTPException(
+      status_code=400,
+      detail="このメールアドレスはすでに登録されています"
+    )
+  stmt = select(User).where(User.username == username)
+  result = await db.execute(stmt)
+  if result.scalar_one_or_none():
+    raise HTTPException(
+      status_code=400,
+      detail="このusernameはすでに登録されています"
+    )
+  new_user = User(
+    username=username,
+    email=email
+  )
+  new_user.set_password(password)
+
+  db.add(new_user)
+  await db.commit()
+  await db.refresh(new_user)
+  
+  # ユーザー登録後、チャットルームを作成
+  await get_or_create_chatroom(new_user.id)
+  print(f"新規ユーザー {username}(ID: {new_user.id}) のチャットルームを作成しました")
+
+  return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+# @app.post("/token")
+# async def login_for_access_token(
+#   request: Request,
+#   form_data: OAuth2PasswordRequestForm = Depends(),
+#   db: AsyncSession = Depends(get_db)
+# ):
+
+#   stmt = select(User).where(
+#     (User.username == form_data.username) | (User.email == form_data.username)
+#   )
+#   result = await db.execute(stmt)
+#   user = result.scalar_one_or_none()
+
+#   if not user or not user.check_password(form_data.password):
+#     raise HTTPException(
+#       status_code=status.HTTP_401_UNAUTHORIZED,
+#       detail="ユーザー名またはパスワードが正しくありません",
+#       headers={"WWW-Authenticate": "Bearer"},
+#     )
+#   request.session["user_id"] = user.id
+#   request.session["username"] = user.username
+
+#   access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#   access_token = create_access_token(
+#     data={"sub": user.username},
+#     expires_delta=access_token_expires
+#   )
+#   return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/token")
+async def login_for_access_token(
+  request: Request,
+  form_data: OAuth2PasswordRequestForm = Depends(),
+  db: AsyncSession = Depends(get_db)
+):
+  stmt = select(User).where(
+    (User.username == form_data.username) | (User.email == form_data.username)
+  )
+  result = await db.execute(stmt)
+  user = result.scalar_one_or_none()
+
+  if not user or not user.check_password(form_data.password):
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="ユーザー名またはパスワードが正しくありません",
+      headers={"WWW-Authenticate": "Bearer"},
+    )
+  
+  # セッションにユーザー情報を保存
+  request.session["user_id"] = user.id
+  request.session["username"] = user.username
+
+  # ログイン時にチャットルームを確認/作成
+  await get_or_create_chatroom(user.id)
+  print(f"ユーザー {user.username}(ID: {user.id}) のチャットルームを確認/作成しました")
+
+  access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+  access_token = create_access_token(
+    data={"sub": user.username},
+    expires_delta=access_token_expires
+  )
+  return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/register")
+async def register_user(
+  username: str = Form(...),
+  email: str = Form(...),
+  password: str = Form(...),
+  db: AsyncSession = Depends(get_db)
+):
+  stmt = select(User).where(User.email == email)
+  result = await db.execute(stmt)
+  if result.scalar_one_or_none():
+    raise HTTPException(
+      status_code=400,
+      detail="このメールアドレスはすでに登録されています"
+    )
+  stmt = select(User).where(User.username == username)
+  result = await db.execute(stmt)
+  if result.scalar_one_or_none():
+    raise HTTPException(
+      status_code=400,
+      detail="このusernameはすでに登録されています"
+    )
+  new_user = User(
+    username=username,
+    email=email
+  )
+  new_user.set_password(password)
+
+  db.add(new_user)
+  await db.commit()
+
+  return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.get("/validate-token")
+async def validate_token(current_user: User = Depends(get_current_user)):
+    """トークンの検証用エンドポイント"""
+    return {"valid": True, "username": current_user.username}
+
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def index(
+  request: Request,
+):
+  user_id = request.session.get("user_id")
+  if not user_id:
+    return RedirectResponse(url="/login", status_code=302)
   return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/chat")
-async def chat(request: Request, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def chat(
+  request: Request, 
+  background_tasks: BackgroundTasks,
+  current_user: User = Depends(get_current_user), 
+  db: AsyncSession = Depends(get_db)
+  ):
   max_retries = 5
   retry_count = 0
   backoff_time = 1
   try:
-    last_pair = await get_last_conversation_pair()
+    user_id = current_user.id 
+    chatroom = await get_or_create_chatroom(user_id)
+    user_files = chatroom["files"]
+    last_pair = await get_last_conversation_pair(user_id)
     if last_pair:
       last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
     else:
       last_two_json = "会話履歴が見つかりませんでした。"
-    user_identifier = request.client.host
-    user_id = await get_user_id(user_identifier)
-    history = await load_json(config.CHAT_LOG_FILE, [])
+    history = await load_json(user_files["chat_log"], [])
     history_json = await to_pretty_json(history)
 
-    summary = await load_json(config.SUMMARY_FILE, [])
+    summary = await load_json(user_files["summary"], [])
     summary_json = await to_pretty_json(summary)
 
-    user_history = await load_json(config.USER_HISTORY_FILE, {})
+    user_history = await load_json(user_files["user_history"], {})
     user_history_json = await to_pretty_json(user_history)
 
     data = await request.json()
@@ -203,7 +467,8 @@ async def chat(request: Request, background_tasks: BackgroundTasks, db: AsyncSes
         "timestamp": datetime.now().isoformat()
     }
     history.append(user_message)
-    await save_json(config.CHAT_LOG_FILE, history)
+    await save_json(user_files["chat_log"], history)
+
     selected_prompt_id = request.session.get("selected_prompt_id")
     print(selected_prompt_id)
     base_prompt = "you are helpful AI assistant"
@@ -252,7 +517,7 @@ async def chat(request: Request, background_tasks: BackgroundTasks, db: AsyncSes
             "timestamp": datetime.now().isoformat()
           }
           history.append(assistant_message)
-          await save_json(config.CHAT_LOG_FILE, history)
+          await save_json(user_files["chat_log"], history)
 
           try:
             summarize_result = await asyncio.to_thread(
@@ -302,13 +567,17 @@ async def chat(request: Request, background_tasks: BackgroundTasks, db: AsyncSes
               "assistant": assistant_summary_message,
               "timestamp": datetime.now().isoformat()
             }
-            await update_user_messages(user_identifier, message_pair)
+            await update_user_messages(user_id, message_pair)
           except Exception as e:
             print(f"Error generating summary: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
           if len(history) % 7 == 0:
-            background_tasks.add_task(generate_summary_task, await to_pretty_json(history))
+            background_tasks.add_task(
+              generate_summary_task, 
+              await to_pretty_json(history),
+              user_id
+            )
         except Exception as e:
           yield f"data: {json.dumps({'error': str(e)})}\n\n"
           error_details = traceback.format_exc()
@@ -322,12 +591,48 @@ async def chat(request: Request, background_tasks: BackgroundTasks, db: AsyncSes
       status_code=500
     )
 
+@app.get("/debug/token")
+async def debug_token(request: Request):
+    """トークンデバッグ用エンドポイント"""
+    auth_header = request.headers.get("Authorization")
+    
+    result = {
+        "auth_header_exists": auth_header is not None,
+        "auth_header": auth_header[:20] + "..." if auth_header else None,
+    }
+    
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "")
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            result["token_valid"] = True
+            result["payload"] = payload
+        except Exception as e:
+            result["token_valid"] = False
+            result["error"] = str(e)
+    
+    return JSONResponse(content=result)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """リクエストヘッダーをログに記録するミドルウェア"""
+    print(f"\n受信したリクエスト: {request.method} {request.url.path}")
+    print("認証ヘッダー:", request.headers.get("Authorization"))
+    
+    response = await call_next(request)
+    
+    print(f"レスポンスステータス: {response.status_code}")
+    return response
+
 
 @app.post("/clear")
-async def clear_chat_data():
-  await save_json(config.CHAT_LOG_FILE, [])
-  await save_json(config.SUMMARY_FILE, [])
-  await save_json(config.USER_HISTORY_FILE, {})
+async def clear_chat_data(current_user: User = Depends(get_current_user)):
+  user_id = current_user.id 
+  chatroom = await get_or_create_chatroom(user_id)
+  user_files = chatroom["files"]
+  await save_json(user_files["chat_log"], [])
+  await save_json(user_files["summary"], [])
+  await save_json(user_files["user_history"], {})
   return JSONResponse(content={"status": "success", "message": "Clear chat history"})
 
 @app.get("/prompt", response_class=HTMLResponse)

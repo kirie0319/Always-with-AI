@@ -21,3 +21,6 @@ aiofiles
 starlette
 asyncpg
 greenlet
+python-jose
+passlib
+pydantic

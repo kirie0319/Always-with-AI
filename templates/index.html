@@ -544,6 +544,40 @@
 
   <script src="/static/chat.js"></script>
   <script src="/static/form-navigation.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('アクセストークンがありません。ログインページにリダイレクトします。');
+        window.location.href = '/login';
+      } else {
+        console.log('アクセストークンが見つかりました。トークンの最初の10文字: ' + token.substring(0, 10) + '...');
+
+        // トークンの検証リクエストを送信
+        fetch('/validate-token', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('トークン検証に失敗しました');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('トークン検証成功:', data);
+          })
+          .catch(error => {
+            console.error('トークン検証エラー:', error);
+            // トークンが無効な場合はログインページにリダイレクト
+            localStorage.removeItem('access_token');
+            window.location.href = '/login?invalid_token=true';
+          });
+      }
+    });
+  </script>
 </body>
 
 </html>

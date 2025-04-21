@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Supporter AI - 新規登録</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo">
+          <i class="fas fa-chart-line"></i>
+          <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
+              class="accent-letter">AI</span></h1>
+        </div>
+      </div>
+
+      <div class="auth-content">
+        <h2>新規アカウント登録</h2>
+
+        {% if error %}
+        <div class="auth-error">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <form id="register-form" class="auth-form" method="post">
+          <div class="form-group">
+            <label for="username">ユーザー名</label>
+            <div class="input-with-icon">
+              <i class="fas fa-user"></i>
+              <input type="text" id="username" name="username" required>
+            </div>
+            <small>半角英数字で4〜20文字</small>
+          </div>
+
+          <div class="form-group">
+            <label for="email">メールアドレス</label>
+            <div class="input-with-icon">
+              <i class="fas fa-envelope"></i>
+              <input type="email" id="email" name="email" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">パスワード</label>
+            <div class="input-with-icon">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="password" name="password" required minlength="8">
+            </div>
+            <small>8文字以上の半角英数字</small>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password">パスワード（確認）</label>
+            <div class="input-with-icon">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="confirm-password" name="confirm-password" required minlength="8">
+            </div>
+          </div>
+
+          <div id="error-message" class="auth-error"></div>
+
+          <button type="submit" class="auth-button">
+            <i class="fas fa-user-plus"></i> 登録する
+          </button>
+        </form>
+
+        <div class="auth-links">
+          <p>既にアカウントをお持ちの方は <a href="/login">ログイン</a> してください</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      // 入力値の取得
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const errorMessage = document.getElementById('error-message');
+
+      // バリデーション
+      if (password !== confirmPassword) {
+        errorMessage.textContent = 'パスワードが一致しません';
+        return;
+      }
+
+      // ユーザー名の形式チェック
+      if (!/^[a-zA-Z0-9_]{4,20}$/.test(username)) {
+        errorMessage.textContent = 'ユーザー名は半角英数字で4〜20文字にしてください';
+        return;
+      }
+
+      try {
+        // 登録ボタンを無効化
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
+
+        // FormDataの作成
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('password', password);
+
+        // サーバーにリクエスト
+        const response = await fetch('/register', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.redirected) {
+          // リダイレクト
+          window.location.href = response.url;
+        } else if (response.ok) {
+          // 成功メッセージを表示
+          errorMessage.className = 'auth-success';
+          errorMessage.textContent = '登録が完了しました。ログインページに移動します...';
+
+          // ログインページへリダイレクト
+          setTimeout(() => {
+            window.location.href = '/login?registered=true';
+          }, 1500);
+        } else {
+          // エラーレスポンスの処理
+          const errorData = await response.json();
+          errorMessage.textContent = errorData.detail || '登録に失敗しました';
+
+          // ボタンを元に戻す
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fas fa-user-plus"></i> 登録する';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+
+        // エラーメッセージを表示
+        errorMessage.textContent = 'サーバーエラーが発生しました。時間をおいて再度お試しください。';
+
+        // ボタンを元に戻す
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-user-plus"></i> 登録する';
+      }
+    });
+  </script>
+</body>
+
+</html>

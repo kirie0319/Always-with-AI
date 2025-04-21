@@ -1,3 +1,6 @@
 # models/__init__.py
-from .prompts import db, Prompt
-# from .users import db, User 
+from .prompts import Prompt 
+from .users import User 
+from database import Base 
+
+__all__ = ['Prompt', 'User', 'Base']

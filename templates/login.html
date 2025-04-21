@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Supporter AI - ログイン</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo">
+          <i class="fas fa-chart-line"></i>
+          <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
+              class="accent-letter">AI</span></h1>
+        </div>
+      </div>
+
+      <div class="auth-content">
+        <h2>ログイン</h2>
+
+        {% if error %}
+        <div class="auth-error">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        {% if request.query_params.get('registered') == 'true' %}
+        <div class="auth-success">
+          ユーザー登録が完了しました。ログインしてください。
+        </div>
+        {% endif %}
+
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="username">ユーザー名またはメールアドレス</label>
+            <div class="input-with-icon">
+              <i class="fas fa-user"></i>
+              <input type="text" id="username" name="username" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">パスワード</label>
+            <div class="input-with-icon">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="password" name="password" required>
+            </div>
+          </div>
+
+          <div id="error-message" class="auth-error"></div>
+
+          <button type="submit" class="auth-button">
+            <i class="fas fa-sign-in-alt"></i> ログイン
+          </button>
+        </form>
+
+        <div class="auth-links">
+          <p>アカウントをお持ちでない方は <a href="/register">新規登録</a> してください</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('error-message');
+
+      try {
+        // ログインボタンを無効化
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
+
+        // サーバーにリクエスト
+        const response = await fetch('/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log('保存されたトークン:', localStorage.getItem('access_token'));
+          console.log('生成されたトークン:', data.access_token);
+          // トークンをlocalStorageに保存
+          localStorage.setItem('access_token', data.access_token);
+
+          // 成功メッセージを表示
+          errorMessage.className = 'auth-success';
+          errorMessage.textContent = 'ログインに成功しました！リダイレクトします...';
+
+          // トップページへリダイレクト
+          setTimeout(() => {
+  // 直接location.hrefではなく、fetchでリクエストしてからリダイレクト
+  fetch('/', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${data.access_token}`
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      window.location.href = '/';
+    } else {
+      errorMessage.textContent = '認証に失敗しました。もう一度ログインしてください。';
+    }
+  });
+}, 1000);
+        } else {
+          // エラーメッセージを表示
+          errorMessage.className = 'auth-error';
+          errorMessage.textContent = data.detail || 'ログインに失敗しました';
+
+          // ボタンを元に戻す
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> ログイン';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+
+        // エラーメッセージを表示
+        errorMessage.className = 'auth-error';
+        errorMessage.textContent = 'サーバーエラーが発生しました。時間をおいて再度お試しください。';
+
+        // ボタンを元に戻す
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> ログイン';
+      }
+    });
+  </script>
+</body>
+
+</html>

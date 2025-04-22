@@ -47,7 +47,7 @@ async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession
       print("ペイロードに'sub'フィールドがありません")
       raise credentials_exception
     print(f"ユーザー名: {username}")
-  except JWTError:
+  except JWTError as e:
     print(f"JWTエラー: {str(e)}")
     raise credentials_exception
   stmt = select(User).where(User.username == username)

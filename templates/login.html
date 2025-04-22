@@ -13,18 +13,22 @@
 </head>
 
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="logo">
-          <i class="fas fa-chart-line"></i>
-          <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
-              class="accent-letter">AI</span></h1>
-        </div>
+  <div class="chat-container financial-container">
+    <div class="chat-header">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
+            class="accent-letter">AI</span></h1>
       </div>
+    </div>
 
-      <div class="auth-content">
-        <h2>ログイン</h2>
+    <!-- ログインフォームコンテナ -->
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>ログイン</h2>
+          <p class="login-description">アカウントにログインして資産運用やライフプランニングを始めましょう</p>
+        </div>
 
         {% if error %}
         <div class="auth-error">
@@ -34,16 +38,22 @@
 
         {% if request.query_params.get('registered') == 'true' %}
         <div class="auth-success">
-          ユーザー登録が完了しました。ログインしてください。
+          <i class="fas fa-check-circle"></i> ユーザー登録が完了しました。ログインしてください。
         </div>
         {% endif %}
 
-        <form id="login-form" class="auth-form">
+        {% if request.query_params.get('invalid_token') == 'true' %}
+        <div class="auth-error">
+          <i class="fas fa-exclamation-circle"></i> セッションの有効期限が切れました。再度ログインしてください。
+        </div>
+        {% endif %}
+
+        <form id="login-form" class="login-form">
           <div class="form-group">
             <label for="username">ユーザー名またはメールアドレス</label>
             <div class="input-with-icon">
               <i class="fas fa-user"></i>
-              <input type="text" id="username" name="username" required>
+              <input type="text" id="username" name="username" placeholder="ユーザー名またはメールアドレスを入力" required>
             </div>
           </div>
 
@@ -51,19 +61,22 @@
             <label for="password">パスワード</label>
             <div class="input-with-icon">
               <i class="fas fa-lock"></i>
-              <input type="password" id="password" name="password" required>
+              <input type="password" id="password" name="password" placeholder="パスワードを入力" required>
+            </div>
+            <div class="form-option">
+              <a href="#" class="forgot-password">パスワードをお忘れですか？</a>
             </div>
           </div>
 
           <div id="error-message" class="auth-error"></div>
 
-          <button type="submit" class="auth-button">
+          <button type="submit" class="financial-action-button login-button">
             <i class="fas fa-sign-in-alt"></i> ログイン
           </button>
         </form>
 
         <div class="auth-links">
-          <p>アカウントをお持ちでない方は <a href="/register">新規登録</a> してください</p>
+          <p>アカウントをお持ちでない方は <a href="/register" class="register-link">新規登録</a> してください</p>
         </div>
       </div>
     </div>
@@ -95,36 +108,35 @@
         const data = await response.json();
 
         if (response.ok) {
-          console.log('保存されたトークン:', localStorage.getItem('access_token'));
-          console.log('生成されたトークン:', data.access_token);
           // トークンをlocalStorageに保存
           localStorage.setItem('access_token', data.access_token);
 
           // 成功メッセージを表示
           errorMessage.className = 'auth-success';
-          errorMessage.textContent = 'ログインに成功しました！リダイレクトします...';
+          errorMessage.innerHTML = '<i class="fas fa-check-circle"></i> ログインに成功しました！リダイレクトします...';
 
           // トップページへリダイレクト
           setTimeout(() => {
-  // 直接location.hrefではなく、fetchでリクエストしてからリダイレクト
-  fetch('/', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${data.access_token}`
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      window.location.href = '/';
-    } else {
-      errorMessage.textContent = '認証に失敗しました。もう一度ログインしてください。';
-    }
-  });
-}, 1000);
+            // 直接location.hrefではなく、fetchでリクエストしてからリダイレクト
+            fetch('/', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${data.access_token}`
+              }
+            })
+            .then(response => {
+              if (response.ok) {
+                window.location.href = '/';
+              } else {
+                errorMessage.className = 'auth-error';
+                errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> 認証に失敗しました。もう一度ログインしてください。';
+              }
+            });
+          }, 1000);
         } else {
           // エラーメッセージを表示
           errorMessage.className = 'auth-error';
-          errorMessage.textContent = data.detail || 'ログインに失敗しました';
+          errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.detail || 'ログインに失敗しました'}`;
 
           // ボタンを元に戻す
           submitButton.disabled = false;
@@ -135,7 +147,7 @@
 
         // エラーメッセージを表示
         errorMessage.className = 'auth-error';
-        errorMessage.textContent = 'サーバーエラーが発生しました。時間をおいて再度お試しください。';
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> サーバーエラーが発生しました。時間をおいて再度お試しください。';
 
         // ボタンを元に戻す
         const submitButton = this.querySelector('button[type="submit"]');

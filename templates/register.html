@@ -13,40 +13,44 @@
 </head>
 
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="logo">
-          <i class="fas fa-chart-line"></i>
-          <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
-              class="accent-letter">AI</span></h1>
-        </div>
+  <div class="chat-container financial-container">
+    <div class="chat-header">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <h1><span class="accent-letter">F</span>inancial <span class="accent-letter">S</span>upporter <span
+            class="accent-letter">AI</span></h1>
       </div>
+    </div>
 
-      <div class="auth-content">
-        <h2>新規アカウント登録</h2>
+    <!-- 登録フォームコンテナ -->
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>新規アカウント登録</h2>
+          <p class="login-description">アカウントを作成して資産運用やライフプランニングを始めましょう</p>
+        </div>
 
         {% if error %}
         <div class="auth-error">
-          {{ error }}
+          <i class="fas fa-exclamation-circle"></i> {{ error }}
         </div>
         {% endif %}
 
-        <form id="register-form" class="auth-form" method="post">
+        <form id="register-form" class="login-form" method="post">
           <div class="form-group">
             <label for="username">ユーザー名</label>
             <div class="input-with-icon">
               <i class="fas fa-user"></i>
-              <input type="text" id="username" name="username" required>
+              <input type="text" id="username" name="username" placeholder="半角英数字で4〜20文字" required>
             </div>
-            <small>半角英数字で4〜20文字</small>
+            <small class="input-help">半角英数字で4〜20文字</small>
           </div>
 
           <div class="form-group">
             <label for="email">メールアドレス</label>
             <div class="input-with-icon">
               <i class="fas fa-envelope"></i>
-              <input type="email" id="email" name="email" required>
+              <input type="email" id="email" name="email" placeholder="example@email.com" required>
             </div>
           </div>
 
@@ -54,28 +58,28 @@
             <label for="password">パスワード</label>
             <div class="input-with-icon">
               <i class="fas fa-lock"></i>
-              <input type="password" id="password" name="password" required minlength="8">
+              <input type="password" id="password" name="password" placeholder="8文字以上の半角英数字" required minlength="8">
             </div>
-            <small>8文字以上の半角英数字</small>
+            <small class="input-help">8文字以上の半角英数字</small>
           </div>
 
           <div class="form-group">
             <label for="confirm-password">パスワード（確認）</label>
             <div class="input-with-icon">
               <i class="fas fa-lock"></i>
-              <input type="password" id="confirm-password" name="confirm-password" required minlength="8">
+              <input type="password" id="confirm-password" name="confirm-password" placeholder="パスワードを再入力" required minlength="8">
             </div>
           </div>
 
           <div id="error-message" class="auth-error"></div>
 
-          <button type="submit" class="auth-button">
+          <button type="submit" class="financial-action-button login-button">
             <i class="fas fa-user-plus"></i> 登録する
           </button>
         </form>
 
         <div class="auth-links">
-          <p>既にアカウントをお持ちの方は <a href="/login">ログイン</a> してください</p>
+          <p>既にアカウントをお持ちの方は <a href="/login" class="register-link">ログイン</a> してください</p>
         </div>
       </div>
     </div>
@@ -94,13 +98,13 @@
 
       // バリデーション
       if (password !== confirmPassword) {
-        errorMessage.textContent = 'パスワードが一致しません';
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> パスワードが一致しません';
         return;
       }
 
       // ユーザー名の形式チェック
       if (!/^[a-zA-Z0-9_]{4,20}$/.test(username)) {
-        errorMessage.textContent = 'ユーザー名は半角英数字で4〜20文字にしてください';
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> ユーザー名は半角英数字で4〜20文字にしてください';
         return;
       }
 
@@ -128,7 +132,7 @@
         } else if (response.ok) {
           // 成功メッセージを表示
           errorMessage.className = 'auth-success';
-          errorMessage.textContent = '登録が完了しました。ログインページに移動します...';
+          errorMessage.innerHTML = '<i class="fas fa-check-circle"></i> 登録が完了しました。ログインページに移動します...';
 
           // ログインページへリダイレクト
           setTimeout(() => {
@@ -137,7 +141,7 @@
         } else {
           // エラーレスポンスの処理
           const errorData = await response.json();
-          errorMessage.textContent = errorData.detail || '登録に失敗しました';
+          errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorData.detail || '登録に失敗しました'}`;
 
           // ボタンを元に戻す
           submitButton.disabled = false;
@@ -147,7 +151,7 @@
         console.error('Error:', error);
 
         // エラーメッセージを表示
-        errorMessage.textContent = 'サーバーエラーが発生しました。時間をおいて再度お試しください。';
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> サーバーエラーが発生しました。時間をおいて再度お試しください。';
 
         // ボタンを元に戻す
         const submitButton = this.querySelector('button[type="submit"]');

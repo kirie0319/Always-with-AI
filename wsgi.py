@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import json, uuid, traceback, os, anthropic, asyncio
 from colorama import Fore, Style
 from contextlib import asynccontextmanager
-from openai import OpenAI
+from openai import AsyncOpenAI
 from typing import Dict, List, Any, Optional
 
 # モジュールとクラスのインポート
@@ -31,6 +31,7 @@ from utils.file_operations import load_json, save_json, to_pretty_json, clear_ca
 from utils.retry_logic import with_retry
 from utils.ai_stream_client import AIStreamClient
 from utils.chatroom_manager import ChatroomManager
+from utils.openrouter_stream import AIOpenRouterStreamClient as OpenRouterStreamClient
 from tasks import generate_summary_task
 
 # 環境変数の読み込み
@@ -52,13 +53,14 @@ anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 
 anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)
-openrouter_client = OpenAI(
+openrouter_client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=openrouter_api_key
 )
 
 # AIストリーミングクライアントの初期化
 ai_stream_client = AIStreamClient(anthropic_client, openrouter_client)
+openrouter_stream_client = OpenRouterStreamClient()
 
 # チャットルームマネージャーの初期化
 chatroom_manager = ChatroomManager(data_dir=DATA_DIR, max_rallies=MAX_RALLIES)
@@ -155,6 +157,8 @@ async def register_user(
             detail=f"ユーザー登録中にエラーが発生しました: {str(e)}"
         )
 
+
+# login function here
 @app.post("/token")
 async def login_for_access_token(
     request: Request,
@@ -194,13 +198,54 @@ async def validate_token(current_user: User = Depends(get_current_user)):
     """トークンの検証用エンドポイント"""
     return {"valid": True, "username": current_user.username}
 
+
+# @app.get("/", response_class=HTMLResponse)
+# async def index(request: Request):
+#     user_id = request.session.get("user_id")
+#     if not user_id:
+#         return RedirectResponse(url="/login", status_code=302)
+#     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/logout")
+async def logout(request: Request):
+    if "user_id" in request.session:
+        del request.session["user_id"]
+    if "username" in request.session:
+        del request.session["username"]
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("access_token")
+    return response
+
 # メインアプリケーションエンドポイント
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def admin(request: Request, db: AsyncSession = Depends(get_db)):
+    prompt_query = await db.execute(select(Prompt))
+    available_prompts = prompt_query.scalars().all()
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("admin.html", {"request": request, "available_prompts": available_prompts})
+
+@app.get("/mobility", response_class=HTMLResponse)
+async def mobility_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mobility/mobility.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/mobility/knowledge", response_class=HTMLResponse)
+async def mobility_knowledge_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mobility/knowledge.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/financial", response_class=HTMLResponse)
+async def financial_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("financial/financial.html", {"request": request, "username": request.session.get("username")})
 
 @app.post("/chat")
 async def chat(
@@ -273,7 +318,7 @@ async def chat(
             resp = ""
             try:
                 # AIからのストリーミングレスポンスを取得
-                async for text in ai_stream_client.stream_response(user_input, system_prompt, "anthropic"):
+                async for text in openrouter_stream_client.stream_response(user_input, system_prompt):
                     if isinstance(text, dict) and "error" in text:
                         yield f"data: {json.dumps(text)}\n\n"
                         return
@@ -499,6 +544,6 @@ async def select_prompt_api(request: Request, db: AsyncSession = Depends(get_db)
 
 if __name__ == '__main__':
     import uvicorn
-    port = int(os.environ.get('PORT', 5000))
-    # port = int(os.environ.get('PORT', 5001))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     uvicorn.run("wsgi:app", host="0.0.0.0", port=port, reload=True)

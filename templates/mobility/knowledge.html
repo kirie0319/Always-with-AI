@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobility Supporter AI - ナレッジシェア</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- 外部CSSファイルの読み込み -->
+  <link rel="stylesheet" href="/static/css/mobility.css">
+  <style>
+    /* ナレッジシェア専用のスタイル */
+    .knowledge-filter-container {
+      background: var(--white);
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .knowledge-filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .knowledge-tag-button {
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    
+    .knowledge-tag-button.active {
+      background-color: var(--color1);
+      color: white;
+    }
+    
+    .knowledge-tag-button:not(.active) {
+      background-color: #f1f2f6;
+      color: var(--text-color);
+    }
+    
+    .knowledge-tag-button:hover:not(.active) {
+      background-color: #e1e4e8;
+    }
+    
+    .knowledge-search-container {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    
+    .knowledge-search-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      font-size: 14px;
+    }
+    
+    .knowledge-search-button {
+      background-color: var(--color1);
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+    
+    .knowledge-search-button:hover {
+      opacity: 0.9;
+    }
+    
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    
+    .knowledge-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    
+    .knowledge-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .knowledge-card-content {
+      padding: 20px;
+    }
+    
+    .knowledge-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .knowledge-card-description {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    
+    .knowledge-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .knowledge-card-tag {
+      font-size: 12px;
+      background-color: #f0f4ff;
+      color: var(--color1);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    .knowledge-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .knowledge-card-status {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+    }
+    
+    .knowledge-card-status.proposal {
+      background-color: #e0edff;
+      color: #2179eb;
+    }
+    
+    .knowledge-card-status.completed {
+      background-color: #e0f5e9;
+      color: #0a8043;
+    }
+    
+    .knowledge-card-status.failed {
+      background-color: #f0f0f0;
+      color: #666;
+    }
+    
+    .knowledge-share-button {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--color1);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+      border: none;
+    }
+    
+    .knowledge-share-button i {
+      margin-left: 8px;
+    }
+    
+    .knowledge-share-button:hover {
+      background-color: var(--color2);
+    }
+    
+    .knowledge-container {
+      padding: 24px;
+      height: calc(100vh - 170px);
+      overflow-y: auto;
+    }
+    
+    .knowledge-card-image {
+      width: 100%;
+      height: 160px;
+      background-color: #f5f7fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color1);
+      font-size: 40px;
+    }
+    
+    /* タグ表示の拡張ボタン */
+    .tag-expand-button {
+      display: flex;
+      align-items: center;
+      background-color: #f1f2f6;
+      color: var(--text-color);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .tag-expand-button i {
+      margin-left: 6px;
+      font-size: 12px;
+    }
+    
+    .tag-expand-button:hover {
+      background-color: #e1e4e8;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- サイドバー -->
+  <div class="sidebar">
+    <!-- ヘッダー -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">Mobility Supporter</div>
+      <button class="toggle-btn">»</button>
+    </div>
+
+    <!-- メニュー -->
+    <ul class="sidebar-menu">
+      <li class="menu-item">
+        <a href="/proposal" class="menu-link">
+          <div class="menu-icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <span href="/mobility" class="menu-text" onclick="window.location.href='/mobility'">提案サポート</span>
+        </a>
+      </li>
+      <li class="menu-item active">
+        <a href="/knowledge" class="menu-link">
+          <div class="menu-icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <span href="/mobility/knowledge" class="menu-text" onclick="window.location.href='/mobility/knowledge'">ナレッジシェア</span>
+        </a>
+      </li>
+    </ul>
+    
+    <!-- フッター -->
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">Mobility Supporter AI © 2025</div>
+    </div>
+  </div>
+
+  <!-- メインアプリケーションコンテナ -->
+  <div class="app-container">
+    <div class="chat-container mobility-container">
+      <div class="chat-header">
+        <div class="logo">
+          <i class="fas fa-car"></i>
+          <h1><span class="accent-letter">M</span>obility <span class="accent-letter">S</span>upporter <span
+              class="accent-letter">AI</span></h1>
+        </div>
+      </div>
+
+      <div class="navigation-button-container">
+        <a href="/prompt" class="nav-btn">
+          <i class="fas fa-edit"></i> プロンプトを編集する
+        </a>
+        <a href="/select" class="nav-btn">
+          <i class="fas fa-list-alt"></i> プロンプトを選択する
+        </a>
+        <a href="/" class="nav-btn return-to-admin">
+          <i class="fas fa-arrow-left"></i> 管理画面に戻る
+        </a>
+      </div>
+
+      <!-- 選択中のプロンプト表示エリア -->
+      <div id="active-prompt" class="active-prompt">
+        <div class="active-prompt-label">
+          <i class="fas fa-check-circle"></i> 現在のプロンプト:
+        </div>
+        <div id="mobility-prompt-name" class="active-prompt-name">デフォルト</div>
+      </div>
+
+      <!-- ナレッジシェアのメインコンテンツ -->
+      <div class="knowledge-container">
+        <h2 style="font-size: 24px; margin-bottom: 20px;">ナレッジシェア</h2>
+        
+        <!-- 検索ボックス -->
+        <div class="knowledge-search-container">
+          <input type="text" class="knowledge-search-input" placeholder="検索キーワードを入力">
+          <button class="knowledge-search-button">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <!-- フィルタータグ -->
+        <div class="knowledge-filter-container">
+          <div class="knowledge-filter-tags">
+            <button class="knowledge-tag-button active">ファミリー向け</button>
+            <button class="knowledge-tag-button">環境重視</button>
+            <button class="knowledge-tag-button">予算重視</button>
+            <button class="knowledge-tag-button">SUV</button>
+            <button class="knowledge-tag-button">セダン</button>
+            <button class="knowledge-tag-button">EV</button>
+            <button class="knowledge-tag-button">残価設定</button>
+            <button class="knowledge-tag-button">保険</button>
+            <button class="knowledge-tag-button">JAF</button>
+            <button class="tag-expand-button">
+              ... <span style="font-size: 12px; margin-left: 4px;">すべてのタグを見る</span>
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 記事グリッド -->
+        <div class="knowledge-grid">
+          <!-- 記事カード 1 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">電気自動車の環境性能と経済性分析</h3>
+              <p class="knowledge-card-description">最新の電気自動車における環境負荷削減効果と、長期的な維持コストの詳細な比較検討。充電インフラの現状と将来性についても踏み込んで解説します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">環境重視</span>
+                <span class="knowledge-card-tag">電気自動車</span>
+                <span class="knowledge-card-tag">コスト分析</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2025/04/15</div>
+                <div>作成者：山田花子</div>
+                <div class="knowledge-card-status proposal">提案中</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 2 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">高齢者向けセダンの安全機能比較</h3>
+              <p class="knowledge-card-description">運転支援システム、視認性、乗り降りのしやすさなど、高齢ドライバーにとって重要な機能を徹底比較。安全性と快適性の両立を追求した提案資料。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">セダン</span>
+                <span class="knowledge-card-tag">安全性</span>
+                <span class="knowledge-card-tag">高齢者</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2025/03/22</div>
+                <div>作成者：佐藤健二</div>
+                <div class="knowledge-card-status completed">成約</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 3 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">予算制約下での最適な家族向け車種選定</h3>
+              <p class="knowledge-card-description">限られた予算内で、安全性、快適性、燃費効率を最大化する車種選定のガイドライン。複数の車種を詳細に比較し、最適な選択肢を提示します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">予算重視</span>
+                <span class="knowledge-card-tag">ファミリー</span>
+                <span class="knowledge-card-tag">コストパフォーマンス</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2025/02/10</div>
+                <div>作成者：鈴木一郎</div>
+                <div class="knowledge-card-status failed">失注</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 4 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">SUVの最新安全技術と子育て支援機能</h3>
+              <p class="knowledge-card-description">チャイルドシート固定、360度カメラ、衝突回避システムなど、子育て世代に最適な最新SUVの安全機能を詳細に解説。実際の使用感も交えて紹介します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">SUV</span>
+                <span class="knowledge-card-tag">ファミリー</span>
+                <span class="knowledge-card-tag">安全性</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2025/01/05</div>
+                <div>作成者：中村理恵</div>
+                <div class="knowledge-card-status proposal">提案中</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 5 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">自動車保険の最新トレンドと選び方</h3>
+              <p class="knowledge-card-description">テレマティクス保険、年齢別料金プラン、特約の比較など、最新の自動車保険の選び方を徹底解説。お客様のリスクと予算に最適な保険プランを提案します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">保険</span>
+                <span class="knowledge-card-tag">コスト分析</span>
+                <span class="knowledge-card-tag">リスク管理</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2024/12/18</div>
+                <div>作成者：高橋学</div>
+                <div class="knowledge-card-status completed">成約</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 6 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">残価設定ローンの仕組みと活用戦略</h3>
+              <p class="knowledge-card-description">残価設定ローンの基本的な仕組みから、メリット・デメリットまで詳細に解説。お客様のライフスタイルと経済状況に合わせた最適な車両購入プランを提案します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">残価設定</span>
+                <span class="knowledge-card-tag">ローン</span>
+                <span class="knowledge-card-tag">経済性</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2024/11/30</div>
+                <div>作成者：渡辺明</div>
+                <div class="knowledge-card-status failed">失注</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 7 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">カーシェアリングと個人所有の総合比較</h3>
+              <p class="knowledge-card-description">都市部の移動ニーズに応じたカーシェアリングと車両購入のメリット・デメリットを徹底比較。ライフスタイルに最適な選択肢を提案します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">カーシェア</span>
+                <span class="knowledge-card-tag">環境重視</span>
+                <span class="knowledge-card-tag">コスト分析</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2024/10/22</div>
+                <div>作成者：小林智子</div>
+                <div class="knowledge-card-status proposal">提案中</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 8 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">JAFロードサービスの活用と選び方</h3>
+              <p class="knowledge-card-description">JAFロードサービスの各プランの特徴、カバーされるサービス、料金体系を詳細に解説。お客様の運転スタイルに最適なプランを提案します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">JAF</span>
+                <span class="knowledge-card-tag">ロードサービス</span>
+                <span class="knowledge-card-tag">安全性</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2024/09/15</div>
+                <div>作成者：木村太郎</div>
+                <div class="knowledge-card-status completed">成約</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 記事カード 9 -->
+          <div class="knowledge-card">
+            <div class="knowledge-card-content">
+              <h3 class="knowledge-card-title">燃費と環境性能の最新トレンド</h3>
+              <p class="knowledge-card-description">ハイブリッド、電気自動車、最新のガソリン車の燃費性能を詳細に比較。環境負荷と経済性の観点から、最適な選択肢を提案します。</p>
+              <div class="knowledge-card-tags">
+                <span class="knowledge-card-tag">環境重視</span>
+                <span class="knowledge-card-tag">燃費</span>
+                <span class="knowledge-card-tag">コスト分析</span>
+              </div>
+              <div class="knowledge-card-footer">
+                <div>2024/08/07</div>
+                <div>作成者：伊藤圭</div>
+                <div class="knowledge-card-status failed">失注</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- シェアボタン -->
+      <button class="knowledge-share-button">
+        提案資料をシェアする
+        <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM要素の取得
+      const menuItems = document.querySelectorAll('.menu-item');
+      const toggleBtn = document.querySelector('.toggle-btn');
+      const sidebar = document.querySelector('.sidebar');
+      const tagButtons = document.querySelectorAll('.knowledge-tag-button');
+      const knowledgeShareButton = document.querySelector('.knowledge-share-button');
+      
+      // サイドバーの折りたたみ/展開
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+          
+          // トグルボタンの向きを変更
+          if (sidebar.classList.contains('collapsed')) {
+            toggleBtn.innerHTML = '«';
+            // シェアボタンの位置を調整
+            if (knowledgeShareButton) {
+              knowledgeShareButton.style.left = 'calc(50% + 30px)';
+            }
+          } else {
+            toggleBtn.innerHTML = '»';
+            // シェアボタンの位置を元に戻す
+            if (knowledgeShareButton) {
+              knowledgeShareButton.style.left = '50%';
+            }
+          }
+        });
+      }
+
+      // サイドメニュークリック処理
+      menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          menuItems.forEach(mi => mi.classList.remove('active'));
+          item.classList.add('active');
+        });
+      });
+      
+      // タグボタンのクリック処理
+      tagButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          tagButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+        });
+      });
+      
+      // シェアボタンのクリック処理
+      if (knowledgeShareButton) {
+        knowledgeShareButton.addEventListener('click', () => {
+          alert('提案資料作成ページに移動します。');
+          // 実際の実装では下記のようにページ遷移などを行う
+          // window.location.href = '/create-proposal';
+        });
+      }
+      
+      // トークン認証の確認
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.log('トークンが見つかりません。デモモードで実行します。');
+      } else {
+        console.log('認証トークンを確認しました。');
+      }
+    });
+  </script>
+</body>
+
+</html>

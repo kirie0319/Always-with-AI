@@ -1,0 +1,753 @@
+/* static/css/mobility.css */
+:root {
+    --text-color: #181818;
+    --color1: #2230F0;
+    --color2: #260DB3;
+    --accent-color: #FF7C35;
+    --drop-shadow: rgba(38, 13, 179, 0.2);
+    --blow-out: #C3C7FB;
+    --white: #ffffff;
+    --light-gray: #f5f5f5;
+    --border-color: #e0e0e0;
+    --gray-circle: #C0C0C0;
+    --radius: 8px;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  body {
+    display: flex;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+  }
+  
+  /* サイドバー - Claudeスタイル */
+  .sidebar {
+    width: 240px;
+    background-color: #f9f9fb;
+    border-right: 1px solid var(--border-color);
+    height: 100vh;
+    padding: 16px 0;
+    z-index: 100;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+  }
+  
+  .sidebar.collapsed {
+    width: 60px;
+  }
+  
+  .sidebar.collapsed .sidebar-logo,
+  .sidebar.collapsed .menu-text,
+  .sidebar.collapsed .sidebar-footer-text {
+    display: none;
+  }
+  
+  .sidebar.collapsed .menu-link {
+    justify-content: center;
+    padding: 10px 0;
+  }
+  
+  .sidebar.collapsed .menu-icon {
+    margin: 0 auto;
+  }
+  
+  /* ロゴ部分 */
+  .sidebar-header {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .sidebar-logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+  
+  .toggle-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  /* メニュー項目 - Claudeスタイル */
+  .sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .menu-item {
+    margin: 4px 0;
+    padding: 0 8px;
+  }
+  
+  .menu-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #666;
+    transition: all 0.2s ease;
+    font-weight: 500;
+  }
+  
+  .menu-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .menu-item.active .menu-link {
+    background-color: rgba(34, 48, 240, 0.1);
+    color: var(--color1);
+  }
+  
+  .menu-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    color: #888;
+  }
+  
+  .menu-item.active .menu-icon {
+    color: var(--color1);
+  }
+  
+  .menu-text {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  /* サイドバーフッター */
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+  }
+  
+  .sidebar-footer-text {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+  }
+  
+  /* メインコンテンツ */
+  .app-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  
+  /* ヘッダー */
+  .chat-header {
+    background: var(--white);
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo i {
+    color: var(--color1);
+    font-size: 20px;
+    margin-right: 10px;
+  }
+  
+  .logo h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-color);
+  }
+  
+  .accent-letter {
+    color: var(--color1);
+  }
+  
+  .tagline {
+    color: var(--text-color);
+    opacity: 0.8;
+    font-size: 14px;
+  }
+  
+  /* ナビゲーションボタン */
+  .navigation-button-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .nav-btn {
+    background-color: var(--color1);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .nav-btn i {
+    margin-right: 6px;
+  }
+  
+  .nav-btn:hover {
+    opacity: 0.9;
+  }
+  
+  /* 選択中のプロンプト表示エリア */
+  .active-prompt {
+    background: var(--white);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    border-left: 4px solid var(--color1);
+    margin-bottom: 8px;
+  }
+  
+  .active-prompt-label {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    margin-right: 10px;
+  }
+  
+  .active-prompt-label i {
+    color: var(--color1);
+    margin-right: 6px;
+  }
+  
+  .active-prompt-name {
+    font-weight: 500;
+  }
+  
+  /* メインコンテンツ */
+  .mobility-main-content {
+    display: flex;
+    margin: 0 8px 8px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    flex: 1;
+    height: calc(100% - 130px);
+  }
+  
+  /* 左側：フォームエリア */
+  .mobility-form-container {
+    width: 50%;
+    background-color: var(--white);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+  }
+  
+  /* ステップコンテナ */
+  .mobility-step-container {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .mobility-step-container.hidden {
+    display: none;
+  }
+  
+  .mobility-step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: solid #DCDCDC;
+  }
+  
+  .mobility-step-number {
+    color: var(--color1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 10px;
+    font-size: 16px;
+  }
+  
+  .mobility-step-title {
+    font-weight: 700;
+    color: var(--text-color);
+    font-size: 16px;
+  }
+  
+  .mobility-step-content {
+    padding-left: 10px;
+  }
+  
+  .mobility-instruction {
+    font-size: 13px;
+    margin-bottom: 16px;
+    color: var(--text-color);
+    font-weight: bold;
+  }
+  
+  .mobility-input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 10px; /* 間隔を統一 */
+  }
+  
+  .mobility-input-row-label {
+    width: 140px;
+    min-width: 140px; /* 最小幅を固定 */
+    font-size: 14px;
+    color: var(--text-color);
+    font-weight: 700; /* 太字に変更 */
+  }
+  
+  .required::after {
+    content: ' *';
+    color: #e74c3c;
+  }
+  
+  /* 修正: 入力フィールドの幅を統一 */
+  .mobility-input-row input,
+  .mobility-input-row select {
+    flex: 0 0 250px; /* flexboxで幅を固定 */
+    width: 250px; /* 固定幅を指定 */
+    max-width: 250px; /* 最大幅も固定 */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  /* 追加単位（歳など）の余白調整 */
+  .mobility-input-row span {
+    margin-left: 8px;
+    font-size: 14px;
+    color: var(--text-color);
+    flex: 0 0 auto; /* 幅を内容に合わせる */
+  }
+  
+  /* ボタングループ */
+  .mobility-button-group {
+    display: flex;
+    gap: 8px;
+    width: 70%;
+  }
+  
+  .mobility-option-button {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+  }
+  
+  .mobility-option-button.active {
+    background-color: var(--color1);
+    color: white;
+    border-color: var(--color1);
+  }
+  
+  .mobility-button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+  }
+  
+  .first-mobility-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  
+  .mobility-action-button {
+    background-color: var(--color1);
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 0 var(--color2);
+    transition: all 0.1s ease;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    top: 0;
+  }
+  
+  .mobility-action-button:hover {
+    background-color: var(--color2);
+  }
+  
+  .mobility-action-button:active {
+    top: 4px;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+    background-color: var(--color2);
+  }
+  
+  .mobility-secondary-button {
+    background-color: #f1f2f6;
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.1s ease;
+  }
+  
+  .mobility-secondary-button:hover {
+    background-color: #e1e4e8;
+  }
+  
+  /* セクションコンテナ */
+  .mobility-section-container {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  
+  .mobility-section-title {
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color1);
+  }
+  
+  /* 右側：レスポンスエリア */
+  .mobility-response-container {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--light-gray);
+    height: 100%;
+  }
+  
+  /* チャットメッセージ表示エリア */
+  .chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    margin-bottom: 0;
+    height: calc(100% - 140px);
+  }
+  
+  /* チャットメッセージスタイル - 吹き出しスタイル */
+  .message {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+    position: relative;
+  }
+  
+  .message.user {
+    margin-left: auto;
+    flex-direction: row-reverse;
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .message.bot .avatar {
+    background: var(--color1);
+  }
+  
+  .message.user .avatar {
+    background: var(--color2);
+  }
+  
+  .message-content {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    position: relative;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 吹き出しの三角形部分 */
+  .message.bot .message-content:before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 15px;
+    border-top: 8px solid transparent;
+    border-right: 10px solid var(--white);
+    border-bottom: 8px solid transparent;
+  }
+  
+  .message.user .message-content:before {
+    content: '';
+    position: absolute;
+    right: -10px;
+    top: 15px;
+    border-top: 8px solid transparent;
+    border-left: 10px solid var(--color1);
+    border-bottom: 8px solid transparent;
+  }
+  
+  .message.bot .message-content {
+    background: var(--white);
+    color: var(--text-color);
+  }
+  
+  .message.user .message-content {
+    background: var(--color1);
+    color: white;
+  }
+  
+  .message p {
+    margin-bottom: 12px;
+  }
+  
+  .message p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .timestamp {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    display: block;
+    text-align: right;
+    margin-top: 4px;
+  }
+  
+  /* チャット入力 - 右側エリアに含める */
+  .chat-input {
+    padding: 12px;
+    background-color: var(--white);
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+  }
+  
+  .input-container {
+    display: flex;
+    margin-bottom: 8px;
+  }
+  
+  .input-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  
+  .input-container button {
+    background-color: var(--color1);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+  
+  .input-container button:hover {
+    opacity: 0.9;
+  }
+  
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .secondary-btn {
+    background-color: #f1f2f6;
+    color: var(--text-color);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  
+  .secondary-btn i {
+    margin-right: 6px;
+  }
+  
+  .secondary-btn:hover {
+    background-color: #e1e4e8;
+  }
+  
+  /* タイピングインジケータ */
+  .typing {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--white);
+    border-radius: 16px;
+    width: fit-content;
+    margin-top: 4px;
+  }
+  
+  .typing span {
+    width: 8px;
+    height: 8px;
+    background: var(--color1);
+    border-radius: 50%;
+    display: inline-block;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+  }
+  
+  .typing span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  
+  .typing span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  
+  /* サポートボタン（T） */
+  .support-button {
+    position: absolute;
+    right: -40px;
+    width: 40px;
+    height: 40px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+  }
+  
+  /* デバッグ用スタイル */
+  body::before {
+    content: "現在のステップ: " attr(data-current-step);
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 9999;
+  }
+  
+  @keyframes typingBounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1.0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 汎用ユーティリティクラス */
+  .hidden {
+    display: none !important;
+  }
+  
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60px;
+    }
+    
+    .sidebar-logo {
+      display: none;
+    }
+  
+    .menu-text {
+      display: none;
+    }
+  
+    .mobility-main-content {
+      flex-direction: column;
+      height: calc(100% - 130px);
+    }
+  
+    .mobility-form-container,
+    .mobility-response-container {
+      width: 100%;
+      height: 50%;
+    }
+  
+    .mobility-form-container {
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+    }
+  
+    .chat-messages {
+      height: calc(100% - 120px);
+    }
+  }

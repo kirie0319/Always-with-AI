@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Project Selector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>プロジェクト & プロンプト セレクター</h1>
+            <div class="user-info">
+                <span class="username">{{ username }}</span>
+                <a href="#" class="logout-btn" id="logout-btn">ログアウト</a>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <section class="prompt-selection">
+                <h2>プロンプトを選択</h2>
+                <div class="prompt-grid">
+                    {% for prompt in available_prompts %}
+                    <div class="prompt-card" data-prompt-id="{{ prompt.id }}">
+                        <i class="{{ prompt.icon }}"></i>
+                        <h3>{{ prompt.name }}</h3>
+                        <p>{{ prompt.description }}</p>
+                        <button class="select-prompt-btn">選択</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="project-selection" style="display: none;">
+                <h2>プロジェクトを選択</h2>
+                <div class="project-grid">
+                    <div class="project-card" data-project-id="mobility">
+                        <i class="fas fa-car"></i>
+                        <h3>モビリティ</h3>
+                        <p>モビリティサポートプロジェクト</p>
+                        <a href="/mobility" class="select-project-btn" onclick="window.location.href='/mobility'">開始</a>
+                    </div>
+                    <div class="project-card" data-project-id="finance">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h3>ファイナンス</h3>
+                        <p>ファイナンスサポートプロジェクト</p>
+                        <a href="/financial" class="select-project-btn" onclick="window.location.href='/financial'">開始</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="admin-footer">
+            <p>&copy; 2025 Finance Advisory Project. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('アクセストークンがありません。ログインページにリダイレクトします。');
+                window.location.href = '/login';
+            } else {
+                console.log('アクセストークンが見つかりました。トークンの最初の10文字: ' + token.substring(0, 10) + '...');
+
+                // トークンの検証リクエストを送信
+                fetch('/validate-token', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('トークン検証に失敗しました');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('トークン検証成功:', data);
+                    })
+                    .catch(error => {
+                        console.error('トークン検証エラー:', error);
+                        // トークンが無効な場合はログインページにリダイレクト
+                        localStorage.removeItem('access_token');
+                        window.location.href = '/login?invalid_token=true';
+                    });
+            }
+
+            // ログアウトボタンのイベントリスナー
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // ローカルストレージからトークンを削除
+                localStorage.removeItem('access_token');
+
+                // ログアウトエンドポイントにリダイレクト
+                window.location.href = '/logout';
+            });
+        });
+    </script>
+</body>
+</html>

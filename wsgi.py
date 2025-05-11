@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import json, uuid, traceback, os, anthropic, asyncio
 from colorama import Fore, Style
 from contextlib import asynccontextmanager
-from openai import OpenAI
+from openai import AsyncOpenAI
 from typing import Dict, List, Any, Optional
 
 # モジュールとクラスのインポート
@@ -31,6 +31,7 @@ from utils.file_operations import load_json, save_json, to_pretty_json, clear_ca
 from utils.retry_logic import with_retry
 from utils.ai_stream_client import AIStreamClient
 from utils.chatroom_manager import ChatroomManager
+from utils.openrouter_stream import AIOpenRouterStreamClient as OpenRouterStreamClient
 from tasks import generate_summary_task
 
 # 環境変数の読み込み
@@ -52,13 +53,14 @@ anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 
 anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)
-openrouter_client = OpenAI(
+openrouter_client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=openrouter_api_key
 )
 
 # AIストリーミングクライアントの初期化
 ai_stream_client = AIStreamClient(anthropic_client, openrouter_client)
+openrouter_stream_client = OpenRouterStreamClient()
 
 # チャットルームマネージャーの初期化
 chatroom_manager = ChatroomManager(data_dir=DATA_DIR, max_rallies=MAX_RALLIES)
@@ -155,6 +157,8 @@ async def register_user(
             detail=f"ユーザー登録中にエラーが発生しました: {str(e)}"
         )
 
+
+# login function here
 @app.post("/token")
 async def login_for_access_token(
     request: Request,
@@ -194,13 +198,64 @@ async def validate_token(current_user: User = Depends(get_current_user)):
     """トークンの検証用エンドポイント"""
     return {"valid": True, "username": current_user.username}
 
+@app.get("/logout")
+async def logout(request: Request):
+    if "user_id" in request.session:
+        del request.session["user_id"]
+    if "username" in request.session:
+        del request.session["username"]
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("access_token")
+    return response
+
 # メインアプリケーションエンドポイント
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def admin(request: Request, db: AsyncSession = Depends(get_db)):
+    prompt_query = await db.execute(select(Prompt))
+    available_prompts = prompt_query.scalars().all()
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("admin.html", {"request": request, "available_prompts": available_prompts})
+
+@app.get("/mobility", response_class=HTMLResponse)
+async def mobility_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mobility/mobility.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/mobility/proposal", response_class=HTMLResponse)
+async def proposal_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mobility/proposal.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/mobility/knowledge", response_class=HTMLResponse)
+async def mobility_knowledge_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("mobility/knowledge.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/financial", response_class=HTMLResponse)
+async def financial_page(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("financial/financial.html", {"request": request, "username": request.session.get("username")})
+
+@app.get("/conversation_history", response_class=HTMLResponse)
+async def conversation_history(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    user_id = current_user.id
+    chatroom = await chatroom_manager.get_or_create_chatroom(user_id)
+    history = await load_json(chatroom["files"]["chat_log"], [])
+    return JSONResponse(content=history)
+    
 
 @app.post("/chat")
 async def chat(
@@ -213,24 +268,48 @@ async def chat(
         user_id = current_user.id
         
         # チャットデータの取得
-        history, summary, user_history = await chatroom_manager.get_chat_data(user_id)
-        last_pair = await chatroom_manager.get_last_conversation_pair(user_id)
+        history, summary, user_history, thread_history = await chatroom_manager.get_chat_data(user_id)
         
-        # データをJSON形式に変換
-        history_json = await to_pretty_json(history)
-        summary_json = await to_pretty_json(summary)
-        user_history_json = await to_pretty_json(user_history)
-        
-        if last_pair:
-            last_two_json = json.dumps(last_pair, ensure_ascii=False, indent=2)
+        threads = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history]
+        if summary and len(summary) > 0:
+            summary_content = summary[0]["content"]
         else:
-            last_two_json = "会話履歴が見つかりませんでした。"
+            summary_content = "" 
+        last_conversation = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history[-2:]]
         
         # ユーザー入力の取得
         data = await request.json()
         user_input = data.get("message", "")
         print(f"User input: {user_input[:50]}...")
+        try:
+            user_type_response = await openrouter_client.chat.completions.create(
+                model="openai/gpt-4.1",
+                messages=[
+                    {"role": "system", "content": f"""Classify the intention of the next utterance using a one-word label. Based on the recent conversation with users
+        {threads}"""},
+                    {"role": "user", "content": user_input} 
+                ],
+                max_tokens=4000,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+        try:
+            user_content_response = await openrouter_client.chat.completions.create(
+                model="openai/gpt-4.1",
+                messages=[
+                    {"role": "system", "content": f"""Summarize the main point of the following utterance in one sentence, clearly identifying the subject and purpose. Based on the recent conversation with users
+        {threads}"""},
+                    {"role": "user", "content": user_input} 
+                ],
+                max_tokens=4000,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return JSONResponse(content={"error": str(e)}, status_code=500)
         
+        print("Type response:", user_type_response.choices[0].message.content)
+        print("Content response:", user_content_response.choices[0].message.content)
         # ユーザーメッセージの追加
         user_message = {
             "role": "user", 
@@ -238,7 +317,16 @@ async def chat(
             "user_id": user_id,
             "timestamp": datetime.now().isoformat()
         }
+        user_thread = {
+            "role": "user", 
+            "type": user_type_response.choices[0].message.content,
+            "content": user_content_response.choices[0].message.content, 
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        }
+
         await chatroom_manager.add_message(user_id, user_message)
+        await chatroom_manager.add_thread(user_id, user_thread)
         
         # 選択されたプロンプトの取得
         selected_prompt_id = request.session.get("selected_prompt_id")
@@ -254,26 +342,32 @@ async def chat(
                 base_prompt = prompt_obj.content
             else:
                 print("Prompt object not found for ID:", selected_prompt_id)
-        
+
+        threads = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history]
+        if summary and len(summary) > 0:
+            summary_content = summary[0]["content"]
+        else:
+            summary_content = "" 
+        last_conversation = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history[-2:]]
         # システムプロンプトの構築
         system_prompt = f"""
         {base_prompt}
 
         ---
-        ###Summary fo conversation
-        {summary_json}
+        ###Summary of conversation
+        {summary_content}
         ###Recent conversation with users
-        {user_history_json}
+        {threads}
         ###Last conversation with users
-        {last_two_json}
+        {last_conversation}
         """
-        
+        print(system_prompt)
         async def generate():
             """ストリーミングレスポンスを生成する非同期ジェネレータ"""
             resp = ""
             try:
                 # AIからのストリーミングレスポンスを取得
-                async for text in ai_stream_client.stream_response(user_input, system_prompt, "anthropic"):
+                async for text in openrouter_stream_client.stream_response(user_content_response.choices[0].message.content, system_prompt):
                     if isinstance(text, dict) and "error" in text:
                         yield f"data: {json.dumps(text)}\n\n"
                         return
@@ -289,64 +383,47 @@ async def chat(
                     "id": str(uuid.uuid4()),
                     "timestamp": datetime.now().isoformat()
                 }
-                await chatroom_manager.add_message(user_id, assistant_message)
-                
-                # 応答のサマリーを生成
                 try:
-                    summarize_result = await asyncio.to_thread(
-                        anthropic_client.messages.create,
-                        model="claude-3-haiku-20240307",
-                        max_tokens=2048,
-                        system="""You are an expert conversation summarizer.
-
-                        Your task is to analyze and summarize response of AI assistant. The goal is to extract key details and provide a clear, short, structured summary of the conversation.
-
-                        Use the following output format:
-
-                        ---
-
-                        ### Chat Summary
-
-                        #### 1. **Overview**
-                        Briefly describe the overall context of the conversation, the participants, and the tone.
-
-                        #### 2. **Key Points**
-                        List 5-7 bullet points that highlight the most important facts, insights, or decisions discussed during the conversation.
-
-                        #### 3. **Topic Timeline** (optional)
-                        If applicable, outline the main topics discussed in chronological order.
-
-                        #### 4. **Follow-up Items**
-                        List any remaining questions, action items, or topics that could be explored further.
-
-                        #### 5. **Context Notes**
-                        Mention any relevant background, such as the fictional setting, tone of the assistant, or relationship between participants.
-
-                        ---
-                        """,
+                    assistant_type_response = await openrouter_client.chat.completions.create(
+                        model="openai/gpt-4.1",
                         messages=[
-                            {"role": "user", "content": assistant_text}
-                        ]
+                            {"role": "system", "content": "Classify the intention of the next utterance using a one-word label."},
+                            {"role": "user", "content": assistant_text} 
+                        ],
+                        max_tokens=4000,
                     )
-                    print(summarize_result.content[0].text)
-                    
-                    # サマリーメッセージの作成と保存
-                    assistant_summary_message = {
-                        "role": "assistant",
-                        "content": summarize_result.content[0].text,
-                        "user_id": user_id,
-                        "id": str(uuid.uuid4()),
-                        "timestamp": datetime.now().isoformat()
-                    }
-                    message_pair = {
-                        "user": user_message,
-                        "assistant": assistant_summary_message,
-                        "timestamp": datetime.now().isoformat()
-                    }
-                    await chatroom_manager.update_user_messages(user_id, message_pair)
                 except Exception as e:
-                    print(f"Error generating summary: {str(e)}")
+                    print(f"Error: {e}")
                     yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                try:
+                    assistant_content_response = await openrouter_client.chat.completions.create(
+                        model="openai/gpt-4.1",
+                        messages=[
+                            {"role": "system", "content": "Summarize the main point of the following utterance in one sentence, clearly identifying the subject and purpose."},
+                            {"role": "user", "content": assistant_text} 
+                        ],
+                        max_tokens=4000,
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                assistant_thread = {
+                    "role": "assistant", 
+                    "type": assistant_type_response.choices[0].message.content,
+                    "content": assistant_content_response.choices[0].message.content, 
+                    "user_id": user_id,
+                    "id": str(uuid.uuid4()),
+                    "timestamp": datetime.now().isoformat()
+                }
+                await chatroom_manager.add_message(user_id, assistant_message)
+                await chatroom_manager.add_thread(user_id, assistant_thread)
+                
+                message_pair = {
+                    "user": user_thread,
+                    "assistant": assistant_thread,
+                    "timestamp": datetime.now().isoformat()
+                }
+                await chatroom_manager.update_user_messages(user_id, message_pair)
                 
                 # 定期的にバックグラウンドでサマリーを更新
                 if len(history) % 7 == 0:
@@ -499,6 +576,6 @@ async def select_prompt_api(request: Request, db: AsyncSession = Depends(get_db)
 
 if __name__ == '__main__':
     import uvicorn
-    port = int(os.environ.get('PORT', 5000))
-    # port = int(os.environ.get('PORT', 5001))
+    # port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     uvicorn.run("wsgi:app", host="0.0.0.0", port=port, reload=True)

@@ -11,7 +11,7 @@
 <body>
   <header>
     <h1>プロンプト一覧</h1>
-    <a href="/">ホームに戻る</a>
+    <a href="#" id="back-to-home">前のページに戻る</a>
   </header>
 
   <main>
@@ -69,6 +69,16 @@
   </main>
 
   <script src="/static/list.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 前のページに戻るボタン
+      const backToHomeBtn = document.getElementById('back-to-home');
+      backToHomeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.history.back();
+      });
+    });
+  </script>
 </body>
 
 </html>

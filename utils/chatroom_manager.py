@@ -1,4 +1,4 @@
-# utils/chatroom_manager.pyfrom datetime import datetime
+# utils/chatroom_manager.py
 import uuid
 import os
 from typing import Dict, List, Any, Optional, Tuple
@@ -23,33 +23,37 @@ class ChatroomManager:
         return {
             "chat_log": os.path.join(self.data_dir, f"chat_log_{user_id}.json"),
             "summary": os.path.join(self.data_dir, f"summary_{user_id}.json"),
-            "user_history": os.path.join(self.data_dir, f"user_history_{user_id}.json")
+            "user_history": os.path.join(self.data_dir, f"user_history_{user_id}.json"),
+            "thread_history": os.path.join(self.data_dir, f"thread_history_{user_id}.json")
         }
     
     async def get_or_create_chatroom(self, user_id: str) -> Dict[str, Any]:
-        """ユーザーのチャットルームを取得または作成"""
         chatrooms = await load_json(self.chatroom_file, {})
-        
         if user_id not in chatrooms:
-            user_files = await self.get_user_files(user_id)
-            
-            # 初期ファイルを作成
-            await save_json(user_files["chat_log"], [])
-            await save_json(user_files["summary"], [])
-            await save_json(user_files["user_history"], {})
-            
             chatrooms[user_id] = {
                 "created_at": datetime.now().isoformat(),
-                "files": user_files
+                "files": await self.get_user_files(user_id)
             }
             await save_json(self.chatroom_file, chatrooms)
-            
+        user_files = await self.get_user_files(user_id)
+        required_files = {
+            "chat_log": [],
+            "summary": [],
+            "user_history": {},
+            "thread_history": []
+        }
+        for file_key, default_value in required_files.items():
+            file_path = user_files[file_key]
+            if not os.path.exists(file_path):
+                await save_json(file_path, default_value)
+        chatrooms[user_id]["files"] = user_files
         return chatrooms[user_id]
     
     async def get_last_conversation_pair(self, user_id: str) -> Optional[Dict[str, Dict]]:
         """最新の会話ペア（ユーザー・アシスタント）を取得"""
         chatroom = await self.get_or_create_chatroom(user_id)
-        history = await load_json(chatroom["files"]["chat_log"], [])
+        # change the caht_log to thread_history
+        history = await load_json(chatroom["files"]["thread_history"], [])
         
         if len(history) < 2:
             return None
@@ -67,7 +71,8 @@ class ChatroomManager:
         """ユーザーのメッセージ履歴を更新"""
         chatroom = await self.get_or_create_chatroom(user_id)
         user_history = await load_json(chatroom["files"]["user_history"], {})
-        history = await load_json(chatroom["files"]["chat_log"], [])
+        # change the chat_log to thread_history
+        history = await load_json(chatroom["files"]["thread_history"], [])
         
         if user_id not in user_history:
             user_history[user_id] = {
@@ -93,6 +98,14 @@ class ChatroomManager:
         history.append(message)
         await save_json(chatroom["files"]["chat_log"], history)
     
+
+    async def add_thread(self, user_id: str, thread: Dict[str, Any]) -> None:
+        """スレッドをチャット履歴に追加"""
+        chatroom = await self.get_or_create_chatroom(user_id)
+        history = await load_json(chatroom["files"]["thread_history"], [])
+        history.append(thread)
+        await save_json(chatroom["files"]["thread_history"], history)
+    
     async def clear_chat_data(self, user_id: str) -> None:
         """ユーザーのチャットデータをクリア"""
         chatroom = await self.get_or_create_chatroom(user_id)
@@ -101,6 +114,7 @@ class ChatroomManager:
         await save_json(user_files["chat_log"], [])
         await save_json(user_files["summary"], [])
         await save_json(user_files["user_history"], {})
+        await save_json(user_files["thread_history"], [])
     
     async def get_chat_data(self, user_id: str) -> Tuple[List, List, Dict]:
         """ユーザーのチャットデータを取得"""
@@ -110,5 +124,6 @@ class ChatroomManager:
         history = await load_json(user_files["chat_log"], [])
         summary = await load_json(user_files["summary"], [])
         user_history = await load_json(user_files["user_history"], {})
+        thread_history = await load_json(user_files["thread_history"], [])
         
-        return history, summary, user_history
+        return history, summary, user_history, thread_history

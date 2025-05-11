@@ -2,13 +2,20 @@
 from celery import shared_task
 import json
 import os
+import logging
 from datetime import datetime
 from anthropic import Anthropic
+from openai import OpenAI
 import aiofiles
 import asyncio
 import config
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+openrouter_client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=os.getenv("OPENROUTER_API_KEY")
+)
+
 
 async def load_json(filepath, default):
   try:
@@ -118,16 +125,33 @@ def generate_summary_task(history_json, user_id):
     And this is the last conversation with users:
     {last_two_json}
     """
-    resp = client.messages.create(
-      model="claude-3-7-sonnet-20250219",
-      max_tokens=4000,
-      messages=[
-        {"role": "user", "content": summarizing_prompt}
-      ]
-    )
-    summary = [{"role": "developer", "content": resp.content[0].text}]
-    run_async(save_json(user_files["summary"], summary))
-    print(f"Summary generated successfully for user {user_id}")
+    models_to_try = [
+      "anthropic/claude-3.7-sonnet",
+      "openai/gpt-4.1"
+    ]
+    models_to_try = [m for m in models_to_try if m is not None]
+    last_exception = None
+    for current_model in models_to_try:
+      try:    
+        resp = openrouter_client.chat.completions.create(
+          model=current_model,
+          max_tokens=4000,
+          messages=[
+            {"role": "user", "content": summarizing_prompt}
+          ]
+        )
+        summary = [{"role": "developer", "content": resp.choices[0].message.content}]
+        run_async(save_json(user_files["summary"], summary))
+        print(f"Summary generated successfully for user {user_id}")
+        return
+      except Exception as e:
+        logging.warning(f"Failed to generate summary with model {current_model}: {str(e)}")
+        last_exception = e
+        continue
+    
+    # If all models fail
+    logging.error("Failed to generate summary with any model")
+    raise last_exception or ValueError("No models could generate a summary")
   except Exception as e:
     print(f"Error generating summary: {e}")
     import traceback

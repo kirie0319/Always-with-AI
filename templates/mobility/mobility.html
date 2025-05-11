@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobility Supporter AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- 外部CSSファイルの読み込み -->
+  <link rel="stylesheet" href="/static/css/mobility.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+</head>
+
+<body>
+  <!-- サイドバー -->
+  <div class="sidebar">
+    <!-- ヘッダー -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">Mobility Supporter</div>
+      <button class="toggle-btn">»</button>
+    </div>
+
+    <!-- メニュー -->
+    <ul class="sidebar-menu">
+      <li class="menu-item active">
+        <a href="#" class="menu-link">
+          <div class="menu-icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <span href="/mobility" class="menu-text" onclick="window.location.href='/mobility'">提案サポート</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="/mobility/knowledge" class="menu-link">
+          <div class="menu-icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <span href="/mobility/knowledge" class="menu-text" onclick="window.location.href='/mobility/knowledge'">ナレッジシェア</span>
+        </a>
+      </li>
+    </ul>
+    
+    <!-- フッター -->
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">Mobility Supporter AI © 2025</div>
+    </div>
+  </div>
+
+  <!-- メインアプリケーションコンテナ -->
+  <div class="app-container">
+    <div class="chat-container mobility-container">
+      <div class="chat-header">
+        <div class="logo">
+          <i class="fas fa-car"></i>
+          <h1><span class="accent-letter">M</span>obility <span class="accent-letter">S</span>upporter <span
+              class="accent-letter">AI</span></h1>
+        </div>
+      </div>
+
+      <div class="navigation-button-container">
+        <a href="/prompt" class="nav-btn">
+          <i class="fas fa-edit"></i> プロンプトを編集する
+        </a>
+        <a href="/select" class="nav-btn">
+          <i class="fas fa-list-alt"></i> プロンプトを選択する
+        </a>
+        <a href="/" class="nav-btn return-to-admin">
+          <i class="fas fa-arrow-left"></i> 管理画面に戻る
+        </a>
+      </div>
+
+      <!-- 選択中のプロンプト表示エリア -->
+      <div id="active-prompt" class="active-prompt">
+        <div class="active-prompt-label">
+          <i class="fas fa-check-circle"></i> 現在のプロンプト:
+        </div>
+        <div id="prompt-name" class="active-prompt-name">デフォルト</div>
+      </div>
+
+      <!-- メインコンテンツ -->
+      <div class="mobility-main-content">
+        <!-- 左側：入力フォームエリア -->
+        <div class="mobility-form-container">
+          <!-- 顧客情報タブのコンテンツ -->
+          <div id="customer-info-content" class="tab-content active">
+            <!-- Step 0: CRM連携 -->
+            <div id="step-0" class="mobility-step-container">
+              <div class="mobility-step-header">
+                <div class="mobility-step-number">Step 0</div>
+                <div class="mobility-step-title">CRM情報と連携する</div>
+              </div>
+
+              <div class="mobility-step-content">
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="cif">Salesforce ID</label>
+                  <input type="text" id="cif" value="6238196171983">
+                </div>
+
+                <div class="first-mobility-button-container">
+                  <button id="connect-info-btn" class="mobility-action-button">情報を連携する</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 1: 本人情報入力 -->
+            <div id="step-1" class="mobility-step-container hidden">
+              <div class="mobility-step-header">
+                <div class="mobility-step-number">Step 2</div>
+                <div class="mobility-step-title">顧客の基本情報</div>
+              </div>
+
+              <div class="mobility-step-content">
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="name">名前</label>
+                  <input type="text" id="name" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="age">年齢</label>
+                  <input type="number" id="age" value="">
+                  <span>歳</span>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="dealer">取引歴</label>
+                  <select id="dealer">
+                    <option value="自社" selected>自社客</option>
+                    <option value="他社">他社</option>
+                  </select>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="phone">電話番号</label>
+                  <input type="tel" id="phone" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="family-size">家族構成</label>
+                  <input type="number" id="family-size" value="">
+                  <span>人</span>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="hobby">趣味</label>
+                  <input type="text" id="hobby" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="next-car">次乗り換えたい車</label>
+                  <input type="text" id="next-car" value="">
+                  <div class="support-button">T</div>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="insurance">任意保険加入状況</label>
+                  <select id="insurance">
+                    <option value="他社" selected>他社</option>
+                    <option value="自社">自社</option>
+                    <option value="なし">なし</option>
+                  </select>
+                  <div class="support-button">T</div>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="insurance-company">保険会社名</label>
+                  <input type="text" id="insurance-company" value="">
+                  <div class="support-button">T</div>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="insurance-type">種別</label>
+                  <select id="insurance-type">
+                    <option value="国内損保" selected>国内損保</option>
+                    <option value="国内生保">国内生保</option>
+                    <option value="外資系">外資系</option>
+                  </select>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="insurance-rank">等級</label>
+                  <input type="text" id="insurance-rank" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="accident-category">事故り区分</label>
+                  <input type="text" id="accident-category" value="">
+                </div>
+
+                <div class="mobility-button-container">
+                  <button id="back-to-step-0" class="mobility-secondary-button">前へ戻る</button>
+                  <button id="next-to-step-2" class="mobility-action-button">次へ進む</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 3: 家計状況 -->
+            <div id="step-3" class="mobility-step-container hidden">
+              <div class="mobility-step-header">
+                <div class="mobility-step-number">Step 3</div>
+                <div class="mobility-step-title">家計状況</div>
+              </div>
+
+              <div class="mobility-step-content">
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="housing-loan">家賃・住宅ローン</label>
+                  <select id="housing-loan">
+                    <option value="有り" selected>有り</option>
+                    <option value="なし">なし</option>
+                  </select>
+                  <div class="support-button">T</div>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="household-income">世帯年収</label>
+                  <input type="number" id="household-income" value="">
+                  <span>万円</span>
+                </div>
+
+                <div class="mobility-button-container">
+                  <button id="back-to-step-2" class="mobility-secondary-button">前へ戻る</button>
+                  <button id="next-to-step-4" class="mobility-action-button">次へ進む</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 4: 車両情報 -->
+            <div id="step-4" class="mobility-step-container hidden">
+              <div class="mobility-step-header">
+                <div class="mobility-step-number">Step 4</div>
+                <div class="mobility-step-title">車両情報</div>
+              </div>
+
+              <div class="mobility-step-content">
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="car-type">車種</label>
+                  <input type="text" id="car-type" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="car-year">年式</label>
+                  <input type="text" id="car-year" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="inspection-date">車検満了日</label>
+                  <input type="date" id="inspection-date" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label required" for="mileage">走行距離</label>
+                  <input type="number" id="mileage" value="">
+                  <span>万km</span>
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="car-number">ナンバー</label>
+                  <input type="text" id="car-number" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="service-history">入庫歴</label>
+                  <input type="text" id="service-history" value="">
+                </div>
+
+                <div class="mobility-input-row">
+                  <label class="mobility-input-row-label" for="car-color">車種の色</label>
+                  <input type="text" id="car-color" value="">
+                </div>
+
+                <div class="mobility-button-container">
+                  <button id="back-to-step-3" class="mobility-secondary-button">前へ戻る</button>
+                  <button id="next-to-step-5" class="mobility-action-button">次へ進む</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 5: 車両コスト比較 -->
+            <div id="step-5" class="mobility-step-container hidden">
+              <div class="mobility-step-header">
+                <div class="mobility-step-number">Step 5</div>
+                <div class="mobility-step-title">車両コスト比較（3年間）</div>
+              </div>
+
+              <div class="mobility-step-content">
+                <!-- 現在の車両 セクション -->
+                <div class="mobility-section-container">
+                  <div class="mobility-section-title">現在の車両</div>
+                  <div class="mobility-section-content" style="padding: 16px;">
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label required" for="current-car-type">車種</label>
+                      <input type="text" id="current-car-type" value="">
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label required" for="current-car-model">型式</label>
+                      <input type="text" id="current-car-model" value="">
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label required" for="annual-mileage">年間走行距離</label>
+                      <input type="number" id="annual-mileage" value="">
+                      <span>万km</span>
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="car-tax">自動車税（3回）</label>
+                      <input type="number" id="car-tax" value="">
+                      <span>万円</span>
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="inspection-cost">車検（2回）</label>
+                      <input type="number" id="inspection-cost" value="">
+                      <span>万円</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 比較の車両 セクション -->
+                <div class="mobility-section-container" style="margin-top: 20px;">
+                  <div class="mobility-section-title">比較の車両 ①</div>
+                  <div class="mobility-section-content" style="padding: 16px;">
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="compare-car-type">車種</label>
+                      <input type="text" id="compare-car-type" value="">
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="compare-car-tax">自動車税（3回）</label>
+                      <input type="number" id="compare-car-tax" value="">
+                      <span>万円</span>
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="compare-inspection-cost">車検（2回）</label>
+                      <input type="number" id="compare-inspection-cost" value="">
+                      <span>万円</span>
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="preferred-maker">希望比較メーカー</label>
+                      <input type="text" id="preferred-maker" value="">
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="preferred-car-type">希望比較車種</label>
+                      <input type="text" id="preferred-car-type" value="">
+                    </div>
+
+                    <div class="mobility-input-row">
+                      <label class="mobility-input-row-label" for="preferred-car-model">希望比較車種型式</label>
+                      <input type="text" id="preferred-car-model" value="">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 比較車両追加ボタン -->
+                <div class="mobility-add-section" style="margin-top: 20px; text-align: center;">
+                  <button id="add-car-comparison" class="mobility-secondary-button" style="width: 100%; padding: 12px;">
+                    <i class="fas fa-plus" style="margin-right: 8px;"></i> 
+                  </button>
+                </div>
+
+                <div class="mobility-button-container" style="margin-top: 30px;">
+                  <button id="back-to-step-4" class="mobility-secondary-button">前へ戻る</button>
+                  <button id="complete-form-final" class="mobility-action-button">登録する</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：チャットメッセージエリア -->
+        <div class="mobility-response-container">
+          <!-- チャットメッセージ表示エリア -->
+          <div class="chat-messages" id="chat-box">
+            <div class="message bot">
+              <div class="avatar">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div class="message-content">
+                <p>こんにちは！<br>まずは左側「CRM情報と連携する」にある情報を連携するボタンをクリックしてください☺️</p>
+                <span class="timestamp">今</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 入力フォーム - 右側のチャットエリアに含める -->
+          <div class="chat-input">
+            <div class="proposal-btn-container" style="margin-bottom: 12px; text-align: center;">
+              <button id="create-proposal-btn" class="mobility-action-button">
+                提案を作成する
+              </button>
+            </div>
+            <div class="input-container">
+              <input type="text" id="input" placeholder="例：車の購入について相談したいです..." />
+              <button id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+            <div class="actions">
+              <button id="clear-btn" onclick="clearChat()" class="secondary-btn">
+                <i class="fas fa-trash-alt"></i> チャットをクリア
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/mobility.js"></script>
+</body>
+
+</html>

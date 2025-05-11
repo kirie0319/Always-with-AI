@@ -20,8 +20,8 @@
         <h1>Zeals<span>.AI</span></h1>
       </div>
       <nav>
-        <a href="/" class="nav-btn"><i class="fas fa-comment"></i> チャットに戻る</a>
-        <a href="/prompt" class="nav-btn"><i class="fas fa-edit"></i> プロンプト編集</a>
+        <a href="#" class="nav-btn" id="back-to-chat"><i class="fas fa-comment"></i> チャットに戻る</a>
+        <a href="#" class="nav-btn" id="edit-prompt"><i class="fas fa-edit"></i> プロンプト編集</a>
       </nav>
     </header>
 
@@ -74,7 +74,26 @@
     </footer>
   </div>
 
-  <script src="/static/select.js"></script>
+  <script type="module" src="/static/select.js"></script>
+  <script type="module">
+    import { getSelectedPromptName } from '/static/utils.js';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // チャットに戻るボタン
+      const backToChatBtn = document.getElementById('back-to-chat');
+      backToChatBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.history.back();
+      });
+
+      // プロンプト編集ボタン
+      const editPromptBtn = document.getElementById('edit-prompt');
+      editPromptBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.history.back();
+      });
+    });
+  </script>
 </body>
 
 </html>

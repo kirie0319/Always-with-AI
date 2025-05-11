@@ -751,3 +751,46 @@
       height: calc(100% - 120px);
     }
   }
+  /* mobility.cssに追加するスタイル */
+
+.proposal-button-container {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+#create-proposal-btn {
+  width: 80%;
+  padding: 10px 20px;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.1s ease;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 0;
+}
+
+
+#create-proposal-btn:active {
+  top: 4px;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+}
+
+.proposal-link {
+  color: var(--color1);
+  text-decoration: underline;
+  font-weight: bold;
+}
+.proposal-view-mode .mobility-form-container {
+  display: none; /* 左側のフォームを非表示 */
+}
+
+.proposal-content {
+  height: 1000px;
+}

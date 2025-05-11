@@ -126,8 +126,8 @@ def generate_summary_task(history_json, user_id):
     {last_two_json}
     """
     models_to_try = [
-      "claude-3-7-sonnet-20250219",
-      "gpt-4o"
+      "anthropic/claude-3.7-sonnet",
+      "openai/gpt-4.1"
     ]
     models_to_try = [m for m in models_to_try if m is not None]
     last_exception = None
@@ -140,7 +140,7 @@ def generate_summary_task(history_json, user_id):
             {"role": "user", "content": summarizing_prompt}
           ]
         )
-        summary = [{"role": "developer", "content": resp.content[0].text}]
+        summary = [{"role": "developer", "content": resp.choices[0].message.content}]
         run_async(save_json(user_files["summary"], summary))
         print(f"Summary generated successfully for user {user_id}")
         return

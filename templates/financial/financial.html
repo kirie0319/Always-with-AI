@@ -556,6 +556,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     inputField.focus();
 
+    loadConversationHistory();
+
     // マークダウンの設定
     marked.setOptions({
       breaks: true, // 改行をbrタグに変換
@@ -587,6 +589,28 @@
     // Send button click event
     sendButton.addEventListener('click', send);
   });
+
+  async function loadConversationHistory() {
+    try {
+      const response = await fetch('/conversation_history', {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error('Error loading conversation history');
+      }
+
+      const history = await response.json();
+
+      history.forEach((msg) => {
+        appendMessage(msg.role === "user" ? "user" : "ai", msg.content)
+      });
+    } catch (error) {
+      console.error('Error loading conversation history:', error);
+      appendMessage('ai', '申し訳ありません。会話履歴の読み込みに失敗しました。')
+    }
+  }
 
   function getAuthHeaders() {
     const token = localStorage.getItem('access_token');

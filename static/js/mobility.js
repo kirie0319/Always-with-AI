@@ -51,7 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // DOM要素の取得
-  const menuItems = document.querySelectorAll('.menu-item');
+  const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
+  menuItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      menuItems.forEach(mi => mi.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  const currentPath = window.location.pathname;
+  menuItems.forEach(item => {
+    const link = item.querySelector('a');
+    if (link && currentPath.includes(link.getAttribute('href'))) {
+      menuItems.forEach(mi => mi.classList.remove('active'));
+      item.classList.add('active');
+    }
+  });
+
   const toggleBtn = document.querySelector('.toggle-btn');
   const sidebar = document.querySelector('.sidebar');
   const step0 = document.getElementById('step-0');
@@ -84,15 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleBtn.innerHTML = sidebar.classList.contains('collapsed') ? '«' : '»';
     });
   }
-
-  // サイドメニュークリック処理
-  menuItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      menuItems.forEach(mi => mi.classList.remove('active'));
-      item.classList.add('active');
-    });
-  });
 
   // 情報連携ボタン (Step 0 -> Step 1)
   if (connectInfoBtn) {
@@ -755,139 +762,197 @@ function clearChat() {
 
 // 提案書を表示する関数
 function showProposal() {
-    // ローディングメッセージを表示
-    const proposalBtn = document.getElementById('create-proposal-btn');
-    if (proposalBtn) {
-        proposalBtn.textContent = '提案書をダウンロードする';
-    }
-    appendMessage('bot', '提案書を作成中です。しばらくお待ちください...');
-    
-    // レイアウトを変更するためのクラスを追加
-    const formContainer = document.querySelector('.mobility-form-container');
-    if (formContainer) {
-      formContainer.style.display = 'none';
-    }
-    
-    // 提案書コンテナを作成（存在しない場合）
-    let proposalWrapper = document.querySelector('.proposal-container-wrapper');
-    if (!proposalWrapper) {
-      proposalWrapper = document.createElement('div');
-      proposalWrapper.className = 'proposal-container-wrapper';
-      
-      // スクロール可能にするスタイルを追加
-      proposalWrapper.style.position = 'relative';
-      proposalWrapper.style.display = 'flex';
-      proposalWrapper.style.flexDirection = 'column';
-      proposalWrapper.style.width = '100%';
-      proposalWrapper.style.height = '100%';
-      proposalWrapper.style.overflow = 'hidden';
-      
-      // 提案書のヘッダー部分
-      const proposalHeader = document.createElement('div');
-      proposalHeader.className = 'proposal-header';
-      proposalHeader.style.position = 'sticky';
-      proposalHeader.style.top = '0';
-      proposalHeader.style.zIndex = '10';
-      proposalHeader.style.backgroundColor = 'white';
-      proposalHeader.innerHTML = `
-      `;
-      proposalWrapper.appendChild(proposalHeader);
-      
-      // 提案書のコンテンツ部分（スクロール可能に設定）
-      const proposalContent = document.createElement('div');
-      proposalContent.className = 'proposal-content';
-      proposalContent.id = 'proposal-content-area';
-      proposalContent.style.overflowY = 'auto';
-      proposalContent.style.height = 'calc(100% - 50px)'; // ヘッダーの高さを引く
-      proposalContent.style.padding = '0';
-      proposalContent.style.boxSizing = 'border-box';
-      
-      proposalWrapper.appendChild(proposalContent);
-      document.querySelector('.mobility-main-content').appendChild(proposalWrapper);
-      
-      fetch('/static/proposal.html')
-      .then(response => {
-          if (!response.ok) {
-              throw new Error('提案書の読み込みに失敗しました。');
-          }
-          return response.text();
-      })
-      .then(html => {
-          const proposalContent = document.getElementById('proposal-content-area');
-          if (proposalContent) {
-              proposalContent.innerHTML = html;
-              
-              // 提案書内部のスタイルを調整
-              const styleElement = document.createElement('style');
-              styleElement.textContent = `
-                  .proposal-container {
-                      max-width: 100%;
-                      margin: 0;
-                      height: auto;
-                      overflow: visible;
-                  }
-                  .content-section {
-                      overflow: visible;
-                      height: auto;
-                  }
-                  .tab-container {
-                      position: sticky;
-                      top: 0;
-                      z-index: 5;
-                      background: #f0f0f0;
-                  }
-                  #proposal-content-area {
-                      -webkit-overflow-scrolling: touch;
-                  }
-              `;
-              document.head.appendChild(styleElement);
-              
-              // 内部コンテナのスクロール調整
-              const proposalContainer = proposalContent.querySelector('.proposal-container');
-              if (proposalContainer) {
-                  proposalContainer.style.height = 'auto';
-                  proposalContainer.style.overflow = 'visible';
-                  proposalContainer.style.maxWidth = '100%';
-              }
-              
-              const scripts = proposalContent.querySelectorAll('script');
-              scripts.forEach(oldScript => {
-                  const newScript = document.createElement('script');
-                  Array.from(oldScript.attributes).forEach(attr => {
-                      newScript.setAttribute(attr.name, attr.value);
-                  });
-                  newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                  oldScript.parentNode.replaceChild(newScript, oldScript);
-              });
-  
-              // DOMContentLoadedイベントを発火して初期化
-              const tabsInit = document.createEvent('Event');
-              tabsInit.initEvent('DOMContentLoaded', true, true);
-              document.dispatchEvent(tabsInit);
-          }
-      })
-      .catch(error => {
-          console.error('提案書の読み込みに失敗しました。', error);
-          appendMessage('bot', '申し訳ありませんが、提案書の読み込みに失敗しました。もう一度お試しください。');
-      });
-    } else {
-      // すでに存在する場合は表示
-      proposalWrapper.style.display = 'flex';
-    }
-    
-    // 少し遅延させて提案書が表示された後にメッセージを追加
-    setTimeout(() => {
-      appendMessage('bot', '提案書が表示されました。右側のタブを切り替えて、各セクションをご確認ください。ご質問があればいつでもお聞きください。');
-    }, 1500);
+  // ローディングメッセージを表示
+  const proposalBtn = document.getElementById('create-proposal-btn');
+  if (proposalBtn) {
+      proposalBtn.textContent = '提案書をダウンロードする';
   }
+  appendMessage('bot', '提案書を作成中です。しばらくお待ちください...');
+  
+  // レイアウトを変更するためのクラスを追加
+  const formContainer = document.querySelector('.mobility-form-container');
+  if (formContainer) {
+    formContainer.style.display = 'none';
+  }
+  
+  // 提案書コンテナを作成（存在しない場合）
+  let proposalWrapper = document.querySelector('.proposal-container-wrapper');
+  if (!proposalWrapper) {
+    proposalWrapper = document.createElement('div');
+    proposalWrapper.className = 'proposal-container-wrapper';
+    
+    // スクロール可能にするスタイルを追加
+    proposalWrapper.style.position = 'relative';
+    proposalWrapper.style.display = 'flex';
+    proposalWrapper.style.flexDirection = 'column';
+    proposalWrapper.style.width = '100%';
+    proposalWrapper.style.height = '100%';
+    proposalWrapper.style.overflow = 'hidden';
+    
+    // 提案書のヘッダー部分
+    const proposalHeader = document.createElement('div');
+    proposalHeader.className = 'proposal-header';
+    proposalHeader.style.position = 'sticky';
+    proposalHeader.style.top = '0';
+    proposalHeader.style.zIndex = '10';
+    proposalHeader.style.backgroundColor = 'white';
+    proposalHeader.innerHTML = `
+    `;
+    proposalWrapper.appendChild(proposalHeader);
+    
+    // 提案書のコンテンツ部分（スクロール可能に設定）
+    const proposalContent = document.createElement('div');
+    proposalContent.className = 'proposal-content';
+    proposalContent.id = 'proposal-content-area';
+    proposalContent.style.overflowY = 'auto';
+    proposalContent.style.height = 'calc(100% - 50px)'; // ヘッダーの高さを引く
+    proposalContent.style.padding = '0';
+    proposalContent.style.boxSizing = 'border-box';
+    
+    proposalWrapper.appendChild(proposalContent);
+    document.querySelector('.mobility-main-content').appendChild(proposalWrapper);
+    
+    fetch('/static/proposal.html')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('提案書の読み込みに失敗しました。');
+        }
+        return response.text();
+    })
+    .then(html => {
+        const proposalContent = document.getElementById('proposal-content-area');
+        if (proposalContent) {
+            proposalContent.innerHTML = html;
+            
+            // 提案書内部のスタイルを調整
+            const styleElement = document.createElement('style');
+            styleElement.textContent = `
+                .proposal-container {
+                    max-width: 100%;
+                    margin: 0;
+                    height: auto;
+                    overflow: visible;
+                }
+                .content-section {
+                    overflow: visible;
+                    height: auto;
+                }
+                .tab-container {
+                    position: sticky;
+                    top: 0;
+                    z-index: 5;
+                    background: #f0f0f0;
+                }
+                #proposal-content-area {
+                    -webkit-overflow-scrolling: touch;
+                }
+            `;
+            document.head.appendChild(styleElement);
+            
+            // 内部コンテナのスクロール調整
+            const proposalContainer = proposalContent.querySelector('.proposal-container');
+            if (proposalContainer) {
+                proposalContainer.style.height = 'auto';
+                proposalContainer.style.overflow = 'visible';
+                proposalContainer.style.maxWidth = '100%';
+            }
+            
+            const scripts = proposalContent.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+
+            // DOMContentLoadedイベントを発火して初期化
+            const tabsInit = document.createEvent('Event');
+            tabsInit.initEvent('DOMContentLoaded', true, true);
+            document.dispatchEvent(tabsInit);
+            
+            // 追加: 閉じるボタンの初期化
+            setTimeout(() => {
+              initializeProposalCloseButton();
+            }, 500);
+        }
+    })
+    .catch(error => {
+        console.error('提案書の読み込みに失敗しました。', error);
+        appendMessage('bot', '申し訳ありませんが、提案書の読み込みに失敗しました。もう一度お試しください。');
+    });
+  } else {
+    // すでに存在する場合は表示
+    proposalWrapper.style.display = 'flex';
+    
+    // 追加: 閉じるボタンの初期化
+    setTimeout(() => {
+      initializeProposalCloseButton();
+    }, 500);
+  }
+  
+  // 少し遅延させて提案書が表示された後にメッセージを追加
+  setTimeout(() => {
+    appendMessage('bot', '提案書が表示されました。右側のタブを切り替えて、各セクションをご確認ください。ご質問があればいつでもお聞きください。');
+  }, 1500);
+}
+
 
 // 提案書を非表示にする関数
 function hideProposal() {
   // レイアウト変更クラスを削除
-  document.querySelector('.mobility-main-content').classList.remove('proposal-view-mode');
-  
-  // メッセージを表示
-  appendMessage('bot', '提案書を閉じました。また確認されたい場合は「提案を作成する」ボタンをクリックしてください。');
+  const proposalWrapper = document.querySelector('.proposal-container-wrapper');
+  if (proposalWrapper) {
+    proposalWrapper.style.display = 'none';
+    
+    // フォームコンテナを再表示
+    const formContainer = document.querySelector('.mobility-form-container');
+    if (formContainer) {
+      formContainer.style.display = 'block';
+    }
+    
+    appendMessage('bot', '提案書を閉じました。また確認されたい場合は「提案を作成する」ボタンをクリックしてください。');
+    
+    // メニューアイテムの元の動作を復元
+    const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
+    menuItems.forEach(item => {
+      const menuText = item.querySelector('.menu-text');
+      if (menuText && menuText.hasAttribute('onclick')) {
+        // 元のonclick属性を維持し、再度正しいURLを割り当てる
+        const href = menuText.getAttribute('href');
+        if (href) {
+          menuText.setAttribute('onclick', `window.location.href='${href}'`);
+        }
+      }
+    });
+    
+    // 必要に応じてアクティブクラスを再設定
+    const currentPath = window.location.pathname;
+    menuItems.forEach(item => {
+      const link = item.querySelector('a');
+      if (link && currentPath.includes(link.getAttribute('href'))) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+}
+
+function initializeProposalCloseButton() {
+  const closeButton = document.querySelector('.proposal-header .proposal-close-btn');
+  if (closeButton) {
+    closeButton.addEventListener('click', hideProposal);
+  } else {
+    const closeButtons = document.querySelectorAll('.proposal-header div');
+    closeButtons.forEach(btn => {
+      if (btn.textContent.includes('×')) {
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', hideProposal);
+      }
+    });
+  }
 }
 
 // タブ切り替えの初期化

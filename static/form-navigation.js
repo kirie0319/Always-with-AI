@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 情報連携ボタン (Step 0 -> Step 1)
   connectInfoBtn.addEventListener('click', () => {
+    console.log('Connect Info Button Clicked');
     currentStep = 1;
     updateStepVisibility();
   });

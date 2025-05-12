@@ -255,6 +255,32 @@ async def conversation_history(
     chatroom = await chatroom_manager.get_or_create_chatroom(user_id)
     history = await load_json(chatroom["files"]["chat_log"], [])
     return JSONResponse(content=history)
+
+@app.post("/select_project")
+async def select_project(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    prompt_id = data.get("prompt_id")
+    project_id = data.get("project_id")
+    print(f"Selected prompt ID: {prompt_id}")
+    print(f"Selected project ID: {project_id}")
+
+    if not prompt_id or not project_id:
+        return JSONResponse(
+            content={"success": False, "message": "プロンプトIDとプロジェクトIDが指定されていません"},
+            status_code=400
+        )
+    request.session["selected_prompt_id"] = prompt_id
+    redirect_url = f"/{project_id}"
+    return JSONResponse(
+        content={
+            "success": True, 
+            "redirect_url": redirect_url,
+            "prompt_id": prompt_id,
+            "project_id": project_id
+            },
+        status_code=200
+    )
+    
     
 
 @app.post("/chat")

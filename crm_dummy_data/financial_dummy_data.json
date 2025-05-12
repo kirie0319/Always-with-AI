@@ -1,0 +1,670 @@
+{
+    "6238196171983": {
+      "personalInfo": {
+        "age": 34,
+        "industry": "IT業界",
+        "company": "株式会社ZEALS",
+        "position": "管理職・マネージャー",
+        "jobType": "営業",
+        "annualIncome": 700,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 34,
+            "occupation": "会社員"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 700,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "投資信託",
+            "amount": 500,
+            "name": "iFreeレバレッジ NASDAQ100",
+            "risk": "高リスク",
+            "hasMaturity": true
+          }
+        ],
+        "retirement": 2000,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 40,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 2000,
+            "remainingMonths": 240
+          },
+          {
+            "type": "自動車ローン",
+            "balance": 400,
+            "remainingMonths": 84
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": true,
+        "caregivingConcerns": true,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "国公立",
+          "elementarySchool": "国公立",
+          "juniorHighSchool": "国公立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "7465231089456": {
+      "personalInfo": {
+        "age": 42,
+        "industry": "製造業",
+        "company": "トヨタ自動車",
+        "position": "一般社員",
+        "jobType": "技術職",
+        "annualIncome": 850,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 40,
+            "occupation": "自営業"
+          },
+          {
+            "relation": "子供",
+            "age": 12,
+            "occupation": "学生"
+          },
+          {
+            "relation": "子供",
+            "age": 8,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 1500,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "株式",
+            "amount": 800,
+            "name": "トヨタ自動車",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "債券",
+            "amount": 300,
+            "name": "国債",
+            "risk": "低リスク",
+            "hasMaturity": true
+          }
+        ],
+        "retirement": 3500,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 55,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 1800,
+            "remainingMonths": 180
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": true,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "国公立",
+          "elementarySchool": "国公立",
+          "juniorHighSchool": "私立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "9812457630215": {
+      "personalInfo": {
+        "age": 29,
+        "industry": "金融業",
+        "company": "みずほ銀行",
+        "position": "一般社員",
+        "jobType": "営業",
+        "annualIncome": 650,
+        "familyStructure": "独身",
+        "familyMembers": []
+      },
+      "financialInfo": {
+        "savings": 450,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "投資信託",
+            "amount": 300,
+            "name": "つみたてNISA",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 800,
+        "hasCar": false,
+        "hasHome": false,
+        "livingExpenses": 28,
+        "loans": []
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": false,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": false,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": false,
+        "childEducation": null
+      }
+    },
+    "3572198460823": {
+      "personalInfo": {
+        "age": 55,
+        "industry": "小売業",
+        "company": "イオン",
+        "position": "管理職・マネージャー",
+        "jobType": "その他",
+        "annualIncome": 920,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 53,
+            "occupation": "会社員"
+          },
+          {
+            "relation": "子供",
+            "age": 22,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 2500,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "株式",
+            "amount": 1200,
+            "name": "イオン",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "投資信託",
+            "amount": 800,
+            "name": "グローバルESG",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "ETF",
+            "amount": 500,
+            "name": "S&P500",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 4500,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 65,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 800,
+            "remainingMonths": 60
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": true,
+        "caregivingConcerns": true,
+        "otherExpenses": true,
+        "investmentStance": "ローリスク ローリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "私立",
+          "elementarySchool": "私立",
+          "juniorHighSchool": "私立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "6129084537215": {
+      "personalInfo": {
+        "age": 38,
+        "industry": "その他",
+        "company": "ハーバーリンク",
+        "position": "経営者",
+        "jobType": "その他",
+        "annualIncome": 1500,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 36,
+            "occupation": "無職"
+          },
+          {
+            "relation": "子供",
+            "age": 6,
+            "occupation": "学生"
+          },
+          {
+            "relation": "子供",
+            "age": 4,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 3000,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "株式",
+            "amount": 2000,
+            "name": "複数銘柄",
+            "risk": "高リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "ETF",
+            "amount": 1500,
+            "name": "VTI",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 0,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 120,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 5000,
+            "remainingMonths": 300
+          },
+          {
+            "type": "自動車ローン",
+            "balance": 500,
+            "remainingMonths": 36
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": false,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": true,
+        "caregivingConcerns": false,
+        "otherExpenses": true,
+        "investmentStance": "ハイリスク ハイリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "私立",
+          "elementarySchool": "私立",
+          "juniorHighSchool": "私立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "8274156390128": {
+      "personalInfo": {
+        "age": 48,
+        "industry": "IT業界",
+        "company": "楽天",
+        "position": "管理職・マネージャー",
+        "jobType": "技術職",
+        "annualIncome": 1200,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 45,
+            "occupation": "会社員"
+          },
+          {
+            "relation": "子供",
+            "age": 18,
+            "occupation": "学生"
+          },
+          {
+            "relation": "子供",
+            "age": 16,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 2000,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "投資信託",
+            "amount": 1500,
+            "name": "eMAXIS Slim",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "株式",
+            "amount": 800,
+            "name": "GAFAM",
+            "risk": "高リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 3000,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 80,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 1200,
+            "remainingMonths": 120
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": false,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": true,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "私立",
+          "elementarySchool": "私立",
+          "juniorHighSchool": "私立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "9127364510827": {
+      "personalInfo": {
+        "age": 33,
+        "industry": "金融業",
+        "company": "野村證券",
+        "position": "一般社員",
+        "jobType": "営業",
+        "annualIncome": 800,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 32,
+            "occupation": "会社員"
+          },
+          {
+            "relation": "子供",
+            "age": 3,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 600,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "株式",
+            "amount": 400,
+            "name": "日経平均ETF",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 1500,
+        "hasCar": false,
+        "hasHome": true,
+        "livingExpenses": 45,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 3500,
+            "remainingMonths": 320
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": false,
+        "domesticTravel": true,
+        "overseasTravel": false,
+        "petOwnership": false,
+        "caregivingConcerns": false,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "私立",
+          "elementarySchool": "私立",
+          "juniorHighSchool": "私立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    },
+    "2481569730148": {
+      "personalInfo": {
+        "age": 61,
+        "industry": "その他",
+        "company": "東京都庁",
+        "position": "管理職・マネージャー",
+        "jobType": "その他",
+        "annualIncome": 980,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 58,
+            "occupation": "自営業"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 3500,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "債券",
+            "amount": 2000,
+            "name": "国債",
+            "risk": "低リスク",
+            "hasMaturity": true
+          },
+          {
+            "type": "投資信託",
+            "amount": 1000,
+            "name": "バランスファンド",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 6000,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 50,
+        "loans": []
+      },
+      "intentions": {
+        "carPurchase": false,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": true,
+        "otherExpenses": false,
+        "investmentStance": "ローリスク ローリターン",
+        "hasChildren": true,
+        "childEducation": null
+      }
+    },
+    "3658291047652": {
+      "personalInfo": {
+        "age": 27,
+        "industry": "IT業界",
+        "company": "フリーランス",
+        "position": "経営者",
+        "jobType": "技術職",
+        "annualIncome": 600,
+        "familyStructure": "独身",
+        "familyMembers": []
+      },
+      "financialInfo": {
+        "savings": 380,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "投資信託",
+            "amount": 250,
+            "name": "つみたてNISA",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "ETF",
+            "amount": 150,
+            "name": "VT",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 500,
+        "hasCar": false,
+        "hasHome": false,
+        "livingExpenses": 25,
+        "loans": []
+      },
+      "intentions": {
+        "carPurchase": false,
+        "homeRenovation": false,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": false,
+        "otherExpenses": true,
+        "investmentStance": "ハイリスク ハイリターン",
+        "hasChildren": false,
+        "childEducation": null
+      }
+    },
+    "7814293065821": {
+      "personalInfo": {
+        "age": 45,
+        "industry": "製造業",
+        "company": "パナソニック",
+        "position": "管理職・マネージャー",
+        "jobType": "技術職",
+        "annualIncome": 880,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 43,
+            "occupation": "会社員"
+          },
+          {
+            "relation": "子供",
+            "age": 15,
+            "occupation": "学生"
+          },
+          {
+            "relation": "子供",
+            "age": 12,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 1800,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "投資信託",
+            "amount": 1200,
+            "name": "インデックスファンド",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "株式",
+            "amount": 600,
+            "name": "日本株",
+            "risk": "中リスク",
+            "hasMaturity": false
+          }
+        ],
+        "retirement": 2500,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 60,
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 1500,
+            "remainingMonths": 150
+          }
+        ]
+      },
+      "intentions": {
+        "carPurchase": true,
+        "homeRenovation": true,
+        "domesticTravel": true,
+        "overseasTravel": true,
+        "petOwnership": false,
+        "caregivingConcerns": true,
+        "otherExpenses": true,
+        "investmentStance": "ミドルリスク ミドルリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "kindergarten": "私立",
+          "elementarySchool": "国公立",
+          "juniorHighSchool": "国公立",
+          "highSchool": "私立",
+          "university": "私立"
+        }
+      }
+    }
+  }

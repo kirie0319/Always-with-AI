@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request, HTTPException, Depends, Response, Backgrou
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -33,6 +34,8 @@ from utils.ai_stream_client import AIStreamClient
 from utils.chatroom_manager import ChatroomManager
 from utils.openrouter_stream import AIOpenRouterStreamClient as OpenRouterStreamClient
 from tasks import generate_summary_task
+
+from api.financial_routes import router as financial_router
 
 # 環境変数の読み込み
 load_dotenv()
@@ -88,8 +91,16 @@ app.add_middleware(
     SessionMiddleware, 
     secret_key=os.getenv("FLASK_SECRET_KEY")
 )
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(financial_router)
 
 # データベース依存関数
 async def get_db():
@@ -99,11 +110,11 @@ async def get_db():
 # ログイン・認証関連エンドポイント
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("auth/login.html", {"request": request})
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse("auth/register.html", {"request": request})
 
 @app.post("/register")
 async def register_user(
@@ -216,7 +227,7 @@ async def admin(request: Request, db: AsyncSession = Depends(get_db)):
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("admin.html", {"request": request, "available_prompts": available_prompts})
+    return templates.TemplateResponse("admin/admin.html", {"request": request, "available_prompts": available_prompts})
 
 @app.get("/mobility", response_class=HTMLResponse)
 async def mobility_page(request: Request):
@@ -280,7 +291,10 @@ async def select_project(request: Request, db: AsyncSession = Depends(get_db)):
             },
         status_code=200
     )
-    
+
+@app.get("/base", response_class=HTMLResponse)
+async def base(request: Request):
+    return templates.TemplateResponse("financial/index.html", {"request": request})
     
 
 @app.post("/chat")
@@ -484,7 +498,7 @@ async def clear_chat_data(current_user: User = Depends(get_current_user)):
 async def get_prompts(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Prompt))
     prompts = result.scalars().all()
-    return templates.TemplateResponse("list.html", {
+    return templates.TemplateResponse("components/list.html", {
         "request": request,
         "data": prompts
     })
@@ -497,7 +511,7 @@ async def get_prompt(prompt_id: int, request: Request, db: AsyncSession = Depend
     if not prompt:
         return templates.TemplateResponse("error.html", {"request": request, "message": "プロンプトが見つかりません"}, status_code=404)
 
-    return templates.TemplateResponse("edit.html", {"request": request, "data": prompt})
+    return templates.TemplateResponse("components/edit.html", {"request": request, "data": prompt})
 
 @app.patch("/prompt/{prompt_id}")
 async def update_prompt(prompt_id: int, request: Request, db: AsyncSession = Depends(get_db)):
@@ -512,7 +526,7 @@ async def update_prompt(prompt_id: int, request: Request, db: AsyncSession = Dep
         prompt.content = p_data["content"]
 
     await db.commit()
-    return templates.TemplateResponse("edit.html", {"request": request, "data": prompt})
+    return templates.TemplateResponse("components/edit.html", {"request": request, "data": prompt})
 
 @app.delete("/prompt/{prompt_id}")
 async def delete_prompt(prompt_id: int, request: Request, db: AsyncSession = Depends(get_db)):
@@ -525,7 +539,7 @@ async def delete_prompt(prompt_id: int, request: Request, db: AsyncSession = Dep
     await db.delete(prompt)
     await db.commit()
     
-    return templates.TemplateResponse("edit.html", {"request": request, "data": prompt})
+    return templates.TemplateResponse("components/edit.html", {"request": request, "data": prompt})
 
 @app.post("/prompts/create")
 async def create_prompt(request: Request, db: AsyncSession = Depends(get_db)):
@@ -544,13 +558,13 @@ async def create_prompt(request: Request, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(new_prompt)
 
-    return templates.TemplateResponse("edit.html", {"request": request, "data": new_prompt})
+    return templates.TemplateResponse("components/edit.html", {"request": request, "data": new_prompt})
 
 @app.get("/select", response_class=HTMLResponse)
 async def select_prompt_page(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Prompt))
     prompts = result.scalars().all()
-    return templates.TemplateResponse("select.html", {"request": request, "prompts": prompts})
+    return templates.TemplateResponse("components/select.html", {"request": request, "prompts": prompts})
 
 @app.get("/api/prompt/{prompt_id}")
 async def get_prompt_api(prompt_id: int, db: AsyncSession = Depends(get_db)):

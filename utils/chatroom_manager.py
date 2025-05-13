@@ -24,7 +24,8 @@ class ChatroomManager:
             "chat_log": os.path.join(self.data_dir, f"chat_log_{user_id}.json"),
             "summary": os.path.join(self.data_dir, f"summary_{user_id}.json"),
             "user_history": os.path.join(self.data_dir, f"user_history_{user_id}.json"),
-            "thread_history": os.path.join(self.data_dir, f"thread_history_{user_id}.json")
+            "thread_history": os.path.join(self.data_dir, f"thread_history_{user_id}.json"),
+            "strategy_data": os.path.join(self.data_dir, f"strategy_{user_id}.json")
         }
     
     async def get_or_create_chatroom(self, user_id: str) -> Dict[str, Any]:
@@ -40,7 +41,8 @@ class ChatroomManager:
             "chat_log": [],
             "summary": [],
             "user_history": {},
-            "thread_history": []
+            "thread_history": [],
+            "strategy_data": {}
         }
         for file_key, default_value in required_files.items():
             file_path = user_files[file_key]
@@ -115,6 +117,8 @@ class ChatroomManager:
         await save_json(user_files["summary"], [])
         await save_json(user_files["user_history"], {})
         await save_json(user_files["thread_history"], [])
+        await save_json(user_files["strategy_data"], {})
+        
     
     async def get_chat_data(self, user_id: str) -> Tuple[List, List, Dict]:
         """ユーザーのチャットデータを取得"""

@@ -1,0 +1,56 @@
+<!-- templates/financial/components/financial_strategy.html -->
+<div id="investment-strategy-content" class="tab-content hidden">
+    <div class="financial-step-container">
+      <div class="financial-step-header">
+        <div class="financial-step-number"><i class="fas fa-chart-line"></i></div>
+        <div class="financial-step-title">ライフプランニング戦略提案</div>
+      </div>
+      
+      <div class="financial-step-content">
+        <p class="financial-instruction">お客様の状況に合わせた最適な資産運用プランをご提案します。</p>
+        
+        <!-- 投資戦略タブナビゲーション -->
+        <div class="investment-tab-navigation">
+          <button class="investment-tab-btn active" data-tab="currentOperation">現運用</button>
+          <button class="investment-tab-btn" data-tab="strategy1">戦略パターン 1</button>
+          <button class="investment-tab-btn" data-tab="strategy2">戦略パターン 2</button>
+          <button class="investment-tab-btn" data-tab="strategy3">戦略パターン 3</button>
+        </div>
+        
+        <!-- タブコンテンツ -->
+        <div class="investment-container">
+          <!-- 現在の分析 -->
+          <div id="currentOperation" class="investment-strategy-tab active">
+            <div id="currentAnalysisContent" class="markdown-content">
+              <p class="placeholder">戦略データを読み込み中...</p>
+            </div>
+          </div>
+        
+          <!-- 戦略 1 -->
+          <div id="strategy1" class="investment-strategy-tab">
+            <div id="strategy1Content" class="markdown-content">
+              <p class="placeholder">戦略パターン 1 を読み込み中...</p>
+            </div>
+          </div>
+        
+          <!-- 戦略 2 -->
+          <div id="strategy2" class="investment-strategy-tab">
+            <div id="strategy2Content" class="markdown-content">
+              <p class="placeholder">戦略パターン 2 を読み込み中...</p>
+            </div>
+          </div>
+        
+          <!-- 戦略 3 -->
+          <div id="strategy3" class="investment-strategy-tab">
+            <div id="strategy3Content" class="markdown-content">
+              <p class="placeholder">戦略パターン 3 を読み込み中...</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="financial-button-container">
+          <button class="financial-action-button return-to-customer-info">顧客情報に戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>

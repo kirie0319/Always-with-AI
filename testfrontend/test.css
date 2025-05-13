@@ -1,0 +1,176 @@
+/* フォント指定 */
+body {
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
+}
+
+/* キャンバスのレスポンシブ対応 */
+.financial-chart-container {
+    position: relative;
+    margin: auto;
+    /* 高さをビューポート基準にし、幅は親要素に追従させる */
+    height: 65vh; /* 高さを少し多めに確保 */
+    width: 90vw;  /* 幅を調整 */
+    max-width: 1000px; /* 最大幅を少し広げる */
+}
+
+/* より小さい画面での高さ調整 */
+@media (max-width: 768px) { /* mdブレークポイント以下 */
+    .financial-chart-container {
+        height: 60vh;
+        width: 95vw;
+    }
+}
+
+/* テーブルの横スクロール用コンテナ */
+.financial-table-container {
+    width: 100%;
+    overflow-x: auto; /* 横スクロールを有効化 */
+    margin-top: 2rem; /* グラフとの間に余白を追加 */
+    padding-bottom: 1rem; /* スクロールバーのためのスペース */
+}
+
+/* テーブルの基本スタイル */
+.financial-data-table {
+    width: max-content; /* テーブル幅を内容に合わせる */
+    min-width: 100%; /* 最小幅はコンテナに合わせる */
+    border-collapse: collapse; /* 罫線を結合 */
+    white-space: nowrap; /* セル内での改行を防ぐ */
+    font-size: 0.875rem; /* text-sm相当: フォントサイズを小さく */
+}
+
+.financial-data-table th,
+.financial-data-table td {
+    border: 1px solid #e2e8f0; /* 罫線 (tailwindcssのgray-300相当) */
+    padding: 0.4rem 0.6rem; /* パディングを少し調整 */
+    text-align: right; /* 基本は右寄せ */
+    vertical-align: middle; /* 垂直方向中央揃え */
+}
+
+.financial-data-table th {
+    background-color: #f3f4f6; /* ヘッダー背景色 (tailwindcssのgray-100相当) */
+    font-weight: 600; /* フォント太さ */
+    position: sticky; /* ヘッダーを固定 */
+    top: 0;
+    z-index: 10;
+}
+
+/* 特定の行の背景色 */
+.financial-data-table .financial-expense-row.bg-orange-100 td {
+    background-color: #ffedd5; /* tailwindcssのorange-100相当 */
+}
+
+.financial-data-table .financial-income-row.bg-blue-100 td,
+.financial-data-table .financial-cashflow-row.bg-blue-100 td {
+    background-color: #dbeafe; /* tailwindcssのblue-100相当 */
+}
+
+.financial-data-table .font-bold {
+    font-weight: 600; /* 太字 */
+}
+
+/* 左寄せにする列の指定 */
+.financial-data-table td:first-child,
+.financial-data-table th:first-child {
+    text-align: left;
+    position: sticky; /* 最初の列を固定 */
+    left: 0;
+    background-color: #f9fafb; /* 固定列の背景色 (gray-50) */
+    z-index: 5; /* ヘッダーより手前 */
+}
+
+.financial-data-table th:first-child {
+    z-index: 15; /* ヘッダーの固定列は最前面 */
+    background-color: #f3f4f6; /* ヘッダー背景色 */
+}
+
+/* ヘッダーの2列目も固定 */
+.financial-data-table th:nth-child(2) {
+    position: sticky;
+    left: 150px; /* 1列目の幅に応じて調整が必要 */
+    background-color: #f3f4f6;
+    z-index: 15;
+}
+
+.financial-data-table td:nth-child(2) {
+    position: sticky;
+    left: 150px; /* 1列目の幅に応じて調整が必要 */
+    background-color: #f9fafb; /* 通常の固定列と同じ背景 */
+    z-index: 5;
+}
+
+/* 1列目の幅を少し広げる */
+.financial-data-table th:first-child,
+.financial-data-table td:first-child {
+    min-width: 150px; /* 最小幅を指定 */
+}
+
+/* 財務シミュレーション特有のスタイル */
+#financial-lifeplan-container, 
+#financial-data-container {
+    margin-top: 1.5rem;
+}
+
+#financial-chart-wrapper, 
+#financial-table-wrapper {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+}
+
+.financial-chart-title, 
+.financial-table-title {
+    color: #2563eb; /* blue-600 */
+    margin-bottom: 1rem;
+}
+
+/* 収入と支出の行に特有のスタイル */
+#financial-income-total td {
+    color: #1d4ed8; /* blue-700 */
+}
+
+#financial-expense-total td {
+    color: #9a3412; /* orange-800 */
+}
+
+.financial-balance-row td {
+    color: #4b5563; /* gray-600 */
+}
+
+/* 年間収支がマイナスの値を赤く表示 */
+#financial-annual-cashflow td:not(:first-child):not(:nth-child(2)):not(:empty) {
+    position: relative;
+}
+
+#financial-annual-cashflow td:not(:first-child):not(:nth-child(2)):not(:empty)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    z-index: -1;
+}
+
+#financial-annual-cashflow td:not(:first-child):not(:nth-child(2)):not(:empty) {
+    color: #000;
+}
+
+#financial-annual-cashflow td:not(:first-child):not(:nth-child(2)):not(:empty) {
+    color: inherit;
+}
+
+#financial-annual-cashflow td:not(:first-child):not(:nth-child(2)):not(:empty):contains("-") {
+    color: #dc2626; /* red-600 */
+}
+
+/* モバイル表示用の調整 */
+@media (max-width: 640px) {
+    .financial-chart-title, 
+    .financial-table-title {
+        font-size: 1.25rem;
+    }
+    
+    .financial-data-table {
+        font-size: 0.75rem;
+    }
+}

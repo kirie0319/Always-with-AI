@@ -1,0 +1,30 @@
+<!-- templates/financial/components/chat_container.html -->
+<div class="financial-response-container">
+    <!-- チャットメッセージ表示エリア -->
+    <div class="chat-messages" id="chat-box">
+      <div class="message bot">
+        <div class="avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>こんにちは！Financial Supporter AIです。資産運用やライフプランニングについてお手伝いします。どのようなことでもお気軽にご相談ください。</p>
+          <span class="timestamp">今</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 入力フォーム - 右側のチャットエリアに含める -->
+    <div class="chat-input">
+      <div class="input-container">
+        <input type="text" id="input" placeholder="例：投資についてアドバイスが欲しいです..." />
+        <button id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="actions">
+        <button id="clear-btn" onclick="clearChat()" class="secondary-btn">
+          <i class="fas fa-trash-alt"></i> チャットをクリア
+        </button>
+      </div>
+    </div>
+</div>

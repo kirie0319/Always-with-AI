@@ -812,7 +812,7 @@ function showProposal() {
     proposalWrapper.appendChild(proposalContent);
     document.querySelector('.mobility-main-content').appendChild(proposalWrapper);
     
-    fetch('/static/proposal.html')
+    fetch('/static/html/proposal.html')
     .then(response => {
         if (!response.ok) {
             throw new Error('提案書の読み込みに失敗しました。');

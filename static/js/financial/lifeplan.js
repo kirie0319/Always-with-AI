@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             display: true,
                             text: '残高 (万円)' // 軸ラベルを統合
                         },
-                        // Y軸の範囲を -6000 から 6000 に変更
                         suggestedMin: -6000, // 最小値を -6000 に設定
                         suggestedMax: 6000   // 最大値は 6000 のまま
                     },
@@ -92,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         },
                         suggestedMin: -300, // 軸の最小値を示唆
                         suggestedMax: 300,  // 軸の最大値を示唆
-                        // グリッド線を他の軸と重ならないようにする
                         grid: {
                             drawOnChartArea: false, // グリッド線をグラフエリアに描画しない
                         },

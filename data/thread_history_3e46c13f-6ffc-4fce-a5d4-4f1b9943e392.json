@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "role": "user",
+    "type": "first",
+    "content": "どの商品が10年後買うのにおすすめですか？",
+    "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
+    "timestamp": "2025-05-14T17:21:45.110639"
+  },
+  {
+    "role": "assistant",
+    "type": "Recommendation",
+    "content": "Subject: 質問者（40歳）が10年後に直面する教育費やリフォーム資金等の大きな支出に備えて、リスク許容度や資金計画に合った荘内銀行の商品を提案することが目的です。",
+    "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
+    "id": "4fc1f910-4265-4f2c-b3ae-d69d2587f269",
+    "timestamp": "2025-05-14T17:22:11.444645"
+  }
+]

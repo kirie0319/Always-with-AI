@@ -146,6 +146,115 @@ async function validateToken() {
   }
 }
 
+// トークン管理クラス
+class TokenManager {
+    constructor() {
+        this.tokenKey = 'access_token';
+        this.refreshTokenKey = 'refresh_token';
+        this.tokenExpiryKey = 'token_expiry';
+    }
+
+    // トークンの保存
+    saveTokens(accessToken, refreshToken, expiresIn) {
+        const expiryTime = Date.now() + (expiresIn * 1000);
+        sessionStorage.setItem(this.tokenKey, accessToken);
+        sessionStorage.setItem(this.refreshTokenKey, refreshToken);
+        sessionStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+    }
+
+    // トークンの取得
+    getAccessToken() {
+        return sessionStorage.getItem(this.tokenKey);
+    }
+
+    // トークンの有効期限チェック
+    isTokenExpired() {
+        const expiryTime = sessionStorage.getItem(this.tokenExpiryKey);
+        if (!expiryTime) return true;
+        return Date.now() >= parseInt(expiryTime);
+    }
+
+    // トークンの更新が必要かチェック
+    shouldRefreshToken() {
+        const expiryTime = sessionStorage.getItem(this.tokenExpiryKey);
+        if (!expiryTime) return true;
+        // 有効期限の5分前から更新を開始
+        return Date.now() >= (parseInt(expiryTime) - 5 * 60 * 1000);
+    }
+
+    // トークンの削除
+    clearTokens() {
+        sessionStorage.removeItem(this.tokenKey);
+        sessionStorage.removeItem(this.refreshTokenKey);
+        sessionStorage.removeItem(this.tokenExpiryKey);
+    }
+}
+
+// トークンマネージャーのインスタンスを作成
+const tokenManager = new TokenManager();
+
+// トークンの更新
+async function refreshAccessToken() {
+    try {
+        const refreshToken = sessionStorage.getItem('refresh_token');
+        if (!refreshToken) {
+            throw new Error('リフレッシュトークンがありません');
+        }
+
+        const response = await fetch('/refresh-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        if (!response.ok) {
+            throw new Error('トークンの更新に失敗しました');
+        }
+
+        const data = await response.json();
+        tokenManager.saveTokens(
+            data.access_token,
+            data.refresh_token,
+            data.expires_in
+        );
+
+        return data.access_token;
+    } catch (error) {
+        console.error('トークン更新エラー:', error);
+        tokenManager.clearTokens();
+        window.location.href = '/login?session_expired=true';
+        throw error;
+    }
+}
+
+// 定期的なトークン更新チェック
+function startTokenRefreshCheck() {
+    setInterval(async () => {
+        if (tokenManager.shouldRefreshToken()) {
+            try {
+                await refreshAccessToken();
+            } catch (error) {
+                console.error('トークン更新チェックエラー:', error);
+            }
+        }
+    }, 60000); // 1分ごとにチェック
+}
+
+// 既存の関数を更新
+function getAuthHeader() {
+    const token = tokenManager.getAccessToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+function isTokenValid() {
+    return !tokenManager.isTokenExpired();
+}
+
+// トークン更新チェックを開始
+startTokenRefreshCheck();
+
 export {
   getAuthHeaders,
   fetchCRMData,

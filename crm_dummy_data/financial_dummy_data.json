@@ -666,5 +666,158 @@
           "university": "私立"
         }
       }
+    },
+    "1234567890123": {
+      "personalInfo": {
+        "age": 40,
+        "industry": "金融業",
+        "company": "大垣共立銀行",
+        "position": "支店長",
+        "jobType": "管理職",
+        "annualIncome": 1000,
+        "familyStructure": "世帯持ち",
+        "familyMembers": [
+          {
+            "relation": "配偶者",
+            "age": 40,
+            "occupation": "無職"
+          },
+          {
+            "relation": "子供",
+            "age": 9,
+            "occupation": "学生"
+          },
+          {
+            "relation": "子供",
+            "age": 6,
+            "occupation": "学生"
+          }
+        ]
+      },
+      "financialInfo": {
+        "savings": 500,
+        "hasInvestments": true,
+        "investments": [
+          {
+            "type": "株式",
+            "amount": 250,
+            "name": "複数銘柄",
+            "risk": "高リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "投資信託",
+            "amount": 150,
+            "name": "複数銘柄",
+            "risk": "中リスク",
+            "hasMaturity": false
+          },
+          {
+            "type": "保険",
+            "amount": 100,
+            "name": "逓減定期保険",
+            "risk": "低リスク",
+            "hasMaturity": true,
+            "maturityAmount": 600,
+            "maturityAge": 60
+          }
+        ],
+        "retirement": 0,
+        "hasCar": true,
+        "hasHome": true,
+        "livingExpenses": 35,
+        "monthlyExpenses": {
+          "rent": 5,
+          "insurance": 3,
+          "loan": 15,
+          "hobby": 5
+        },
+        "loans": [
+          {
+            "type": "住宅ローン",
+            "balance": 4000,
+            "remainingMonths": 324,
+            "interestRate": 0.75
+          }
+        ],
+        "spouseAssets": {
+          "savings": 500
+        }
+      },
+      "intentions": {
+        "carPurchase": true,
+        "carReplacement": {
+          "frequency": 5,
+          "amount": 200,
+          "lastPurchase": 75
+        },
+        "homeRenovation": {
+          "planned": true,
+          "amount": 300,
+          "yearsFromNow": 15
+        },
+        "domesticTravel": {
+          "annual": true,
+          "amount": 20
+        },
+        "overseasTravel": {
+          "frequency": 10,
+          "amount": 100
+        },
+        "petOwnership": false,
+        "caregivingConcerns": false,
+        "otherExpenses": true,
+        "investmentStance": "ハイリスク ハイリターン",
+        "hasChildren": true,
+        "childEducation": {
+          "son": {
+            "elementarySchool": "国公立",
+            "juniorHighSchool": "私立",
+            "highSchool": "私立",
+            "university": "国公立",
+            "major": "理系",
+            "targetAmount": 800
+          },
+          "daughter": {
+            "elementarySchool": "国公立",
+            "juniorHighSchool": "私立",
+            "highSchool": "私立",
+            "university": "私立",
+            "major": "文系",
+            "targetAmount": 800
+          }
+        },
+        "retirement": {
+          "plannedAge": 65,
+          "pension": {
+            "monthly": 30,
+            "startAge": 65
+          }
+        },
+        "investmentStrategy": {
+          "riskTolerance": "成長重視型",
+          "experience": {
+            "stocks": 17,
+            "mutualFunds": 17,
+            "foreignCurrency": 17,
+            "insurance": 15
+          },
+          "currentInvestments": {
+            "variableAnnuity": {
+              "monthly": 2,
+              "currentValue": 80,
+              "principal": 50
+            },
+            "iDeCo": {
+              "monthly": 2.3
+            },
+            "fixedInsurance": {
+              "maturityAmount": 500,
+              "maturityAge": 60
+            }
+          },
+          "interest": ["グロース株"]
+        }
+      }
     }
   }

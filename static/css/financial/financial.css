@@ -660,7 +660,7 @@ body {
   /* 高さをビューポート基準にし、幅は親要素に追従させる */
   height: 65vh; /* 高さを少し多めに確保 */
   width: 90vw;  /* 幅を調整 */
-  max-width: 1000px; /* 最大幅を少し広げる */
+  /* max-width: 1000px;  */
 }
 
 /* より小さい画面での高さ調整 */
@@ -825,8 +825,7 @@ body {
   }
 }
 /* 1) wrapper 自体の高さはお好みで */
-#financial-chart-wrapper {
-  height: 55vh;                /* 画面高 55 % */
+#financial-chart-wrapper {           /* 画面高 55 % */
   min-height: 320px;           /* スマホで潰れすぎないように */
 }
 
@@ -834,5 +833,4 @@ body {
 .financial-chart-container,
 #financial-combined-chart {
   width: 100% !important;
-  height: 100% !important;
 }

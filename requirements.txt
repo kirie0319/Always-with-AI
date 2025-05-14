@@ -24,3 +24,5 @@ greenlet
 python-jose
 passlib
 pydantic
+langchain
+langchain-community

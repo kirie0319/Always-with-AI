@@ -152,41 +152,58 @@ class TokenManager {
         this.tokenKey = 'access_token';
         this.refreshTokenKey = 'refresh_token';
         this.tokenExpiryKey = 'token_expiry';
+        console.log('TokenManager initialized');
     }
 
     // トークンの保存
     saveTokens(accessToken, refreshToken, expiresIn) {
         const expiryTime = Date.now() + (expiresIn * 1000);
-        sessionStorage.setItem(this.tokenKey, accessToken);
-        sessionStorage.setItem(this.refreshTokenKey, refreshToken);
-        sessionStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+        console.log('Saving tokens:', {
+            accessToken: accessToken ? `${accessToken.substring(0, 10)}...` : null,
+            refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : null,
+            expiryTime: new Date(expiryTime).toISOString()
+        });
+        localStorage.setItem(this.tokenKey, accessToken);
+        localStorage.setItem(this.refreshTokenKey, refreshToken);
+        localStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
     }
 
     // トークンの取得
     getAccessToken() {
-        return sessionStorage.getItem(this.tokenKey);
+        const token = localStorage.getItem(this.tokenKey);
+        console.log('Getting access token:', token ? `${token.substring(0, 10)}...` : null);
+        return token;
     }
 
     // トークンの有効期限チェック
     isTokenExpired() {
-        const expiryTime = sessionStorage.getItem(this.tokenExpiryKey);
-        if (!expiryTime) return true;
-        return Date.now() >= parseInt(expiryTime);
+        const expiryTime = localStorage.getItem(this.tokenExpiryKey);
+        const isExpired = !expiryTime || Date.now() >= parseInt(expiryTime);
+        console.log('Token expiry check:', {
+            expiryTime: expiryTime ? new Date(parseInt(expiryTime)).toISOString() : null,
+            currentTime: new Date().toISOString(),
+            isExpired
+        });
+        return isExpired;
     }
 
     // トークンの更新が必要かチェック
     shouldRefreshToken() {
-        const expiryTime = sessionStorage.getItem(this.tokenExpiryKey);
-        if (!expiryTime) return true;
-        // 有効期限の5分前から更新を開始
-        return Date.now() >= (parseInt(expiryTime) - 5 * 60 * 1000);
+        const expiryTime = localStorage.getItem(this.tokenExpiryKey);
+        const shouldRefresh = !expiryTime || Date.now() >= (parseInt(expiryTime) - 5 * 60 * 1000);
+        console.log('Should refresh token check:', {
+            expiryTime: expiryTime ? new Date(parseInt(expiryTime)).toISOString() : null,
+            currentTime: new Date().toISOString(),
+            shouldRefresh
+        });
+        return shouldRefresh;
     }
 
     // トークンの削除
     clearTokens() {
-        sessionStorage.removeItem(this.tokenKey);
-        sessionStorage.removeItem(this.refreshTokenKey);
-        sessionStorage.removeItem(this.tokenExpiryKey);
+        localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem(this.refreshTokenKey);
+        localStorage.removeItem(this.tokenExpiryKey);
     }
 }
 
@@ -194,13 +211,19 @@ class TokenManager {
 const tokenManager = new TokenManager();
 
 // トークンの更新
-async function refreshAccessToken() {
+async function refreshAccessToken(retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1秒
+
     try {
-        const refreshToken = sessionStorage.getItem('refresh_token');
+        console.log('Starting token refresh process');
+        const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) {
+            console.error('No refresh token found in localStorage');
             throw new Error('リフレッシュトークンがありません');
         }
 
+        console.log('Sending refresh token request');
         const response = await fetch('/refresh-token', {
             method: 'POST',
             headers: {
@@ -210,10 +233,25 @@ async function refreshAccessToken() {
         });
 
         if (!response.ok) {
+            if (retryCount < MAX_RETRIES) {
+                console.log(`Token refresh failed, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                return refreshAccessToken(retryCount + 1);
+            }
+            console.error('Token refresh failed after retries:', {
+                status: response.status,
+                statusText: response.statusText
+            });
             throw new Error('トークンの更新に失敗しました');
         }
 
         const data = await response.json();
+        console.log('Token refresh successful:', {
+            accessToken: data.access_token ? `${data.access_token.substring(0, 10)}...` : null,
+            refreshToken: data.refresh_token ? `${data.refresh_token.substring(0, 10)}...` : null,
+            expiresIn: data.expires_in
+        });
+
         tokenManager.saveTokens(
             data.access_token,
             data.refresh_token,
@@ -222,7 +260,12 @@ async function refreshAccessToken() {
 
         return data.access_token;
     } catch (error) {
-        console.error('トークン更新エラー:', error);
+        console.error('Token refresh error:', error);
+        if (retryCount < MAX_RETRIES) {
+            console.log(`Token refresh error, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            return refreshAccessToken(retryCount + 1);
+        }
         tokenManager.clearTokens();
         window.location.href = '/login?session_expired=true';
         throw error;
@@ -236,10 +279,11 @@ function startTokenRefreshCheck() {
             try {
                 await refreshAccessToken();
             } catch (error) {
-                console.error('トークン更新チェックエラー:', error);
+                console.error('Token refresh check error:', error);
+                // エラーが発生しても即座にログアウトせず、次のチェックを待つ
             }
         }
-    }, 60000); // 1分ごとにチェック
+    }, 30000); // 30秒ごとにチェック（より頻繁にチェック）
 }
 
 // 既存の関数を更新

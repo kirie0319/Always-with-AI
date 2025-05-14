@@ -32,7 +32,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
   if expires_delta:
     expire = datetime.utcnow() + expires_delta
   else: 
-    expire = datetime.utcnow() + timedelta(minutes=15) 
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   to_encode.update({"exp": expire})
   encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
   return encode_jwt
@@ -57,33 +57,35 @@ def create_tokens(data: dict):
     }
 
 async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_db)):
-  print("\n--- get_current_user関数が呼び出されました ---")
-  print(f"受け取ったトークン: {token}")
+  print("\n=== Token Validation Debug ===")
+  print(f"Token received: {token[:10]}...")
   credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="認証情報が無効です",
     headers={"WWW-Authenticate": "Bearer"},
   )
   try:
-    print(f"SECRET_KEY: {SECRET_KEY[:3]}...")
+    print(f"Using SECRET_KEY: {SECRET_KEY[:3]}...")
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    print(f"デコードされたペイロード: {payload}")
+    print(f"Decoded payload: {payload}")
     username: str = payload.get("sub")
     if username is None:
-      print("ペイロードに'sub'フィールドがありません")
+      print("Error: 'sub' field missing in payload")
       raise credentials_exception
-    print(f"ユーザー名: {username}")
+    print(f"Username from token: {username}")
   except JWTError as e:
-    print(f"JWTエラー: {str(e)}")
+    print(f"JWT Error: {str(e)}")
     raise credentials_exception
+
   stmt = select(User).where(User.username == username)
   result = await db.execute(stmt)
   user = result.scalar_one_or_none()
 
   if user is None:
-    print(f"ユーザー '{username}' がデータベースに見つかりません")
+    print(f"Error: User '{username}' not found in database")
     raise credentials_exception
-  print(f"ユーザーが見つかりました: ID={user.id}, ユーザー名={user.username}")
+  print(f"User found: ID={user.id}, username={user.username}")
+  print("=== Token Validation Complete ===\n")
   return user
 
 async def refresh_token(refresh_token: str):

@@ -103,6 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     legend: { // 凡例の設定
                         position: 'bottom', // 下部に表示
+                    },
+                    datalabels: {
+                        display: false
                     }
                 },
                 interaction: { // インタラクション設定

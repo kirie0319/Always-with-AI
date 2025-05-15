@@ -15,7 +15,7 @@ from models.users import User
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # リフレッシュトークンの有効期限（30日）
 REFRESH_TOKEN_EXPIRE_DAYS = 30
@@ -34,7 +34,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
   else: 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   to_encode.update({"exp": expire})
+  print(f"\n=== Token Creation Debug ===")
+  print(f"Expiry time: {expire}")
+  print(f"Data to encode: {to_encode}")
   encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+  print(f"=== Token Creation Complete ===\n")
   return encode_jwt
 
 def create_refresh_token(data: dict):
@@ -45,16 +49,23 @@ def create_refresh_token(data: dict):
 
 def create_tokens(data: dict):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    print(f"\n=== Token Creation Process ===")
+    print(f"Access token expiry minutes: {ACCESS_TOKEN_EXPIRE_MINUTES}")
+    print(f"Data for token: {data}")
     access_token = create_access_token(
         data=data,
         expires_delta=access_token_expires
     )
     refresh_token = create_refresh_token(data=data)
-    return {
+    tokens = {
         "access_token": access_token,
         "refresh_token": refresh_token,
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
     }
+    print(f"Created tokens with expiry: {ACCESS_TOKEN_EXPIRE_MINUTES * 60} seconds")
+    print(f"Response structure: {tokens}")
+    print(f"=== Token Creation Process Complete ===\n")
+    return tokens
 
 async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_db)):
   print("\n=== Token Validation Debug ===")

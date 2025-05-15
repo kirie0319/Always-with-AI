@@ -64,7 +64,7 @@ class AIOpenRouterStreamClient:
                         ],
                         max_tokens=max_tokens,
                         stream=True,
-                        temperature=0
+                        temperature=0.0
                     )
                     
                     print(f"\n{Fore.BLUE}Model {current_model}:{Style.RESET_ALL}", end="")

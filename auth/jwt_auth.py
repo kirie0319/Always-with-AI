@@ -63,7 +63,6 @@ def create_tokens(data: dict):
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
     }
     print(f"Created tokens with expiry: {ACCESS_TOKEN_EXPIRE_MINUTES * 60} seconds")
-    print(f"Response structure: {tokens}")
     print(f"=== Token Creation Process Complete ===\n")
     return tokens
 

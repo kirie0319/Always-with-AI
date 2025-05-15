@@ -158,14 +158,30 @@ class TokenManager {
     // トークンの保存
     saveTokens(accessToken, refreshToken, expiresIn) {
         const expiryTime = Date.now() + (expiresIn * 1000);
-        console.log('Saving tokens:', {
+        console.log('TokenManager - Saving tokens:', {
             accessToken: accessToken ? `${accessToken.substring(0, 10)}...` : null,
             refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : null,
+            expiresIn: expiresIn,
             expiryTime: new Date(expiryTime).toISOString()
         });
+        
+        if (!accessToken || !refreshToken) {
+            console.warn('TokenManager - Warning: Missing tokens:', {
+                hasAccessToken: !!accessToken,
+                hasRefreshToken: !!refreshToken
+            });
+        }
+        
         localStorage.setItem(this.tokenKey, accessToken);
         localStorage.setItem(this.refreshTokenKey, refreshToken);
         localStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+        
+        // 保存後の確認
+        console.log('TokenManager - Tokens saved, verification:', {
+            accessToken: localStorage.getItem(this.tokenKey) ? 'saved' : 'missing',
+            refreshToken: localStorage.getItem(this.refreshTokenKey) ? 'saved' : 'missing',
+            expiryTime: localStorage.getItem(this.tokenExpiryKey) ? 'saved' : 'missing'
+        });
     }
 
     // トークンの取得
@@ -209,6 +225,9 @@ class TokenManager {
 
 // トークンマネージャーのインスタンスを作成
 const tokenManager = new TokenManager();
+
+// TokenManagerクラスをエクスポート
+export { TokenManager };
 
 // トークンの更新
 async function refreshAccessToken(retryCount = 0) {

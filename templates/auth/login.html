@@ -74,7 +74,9 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { TokenManager } from '/static/js/financial/api-service.js';
+    
     document.getElementById('login-form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
@@ -98,10 +100,20 @@
         });
 
         const data = await response.json();
+        console.log('Login response data:', {
+          access_token: data.access_token ? `${data.access_token.substring(0, 10)}...` : null,
+          refresh_token: data.refresh_token ? `${data.refresh_token.substring(0, 10)}...` : null,
+          expires_in: data.expires_in
+        });
 
         if (response.ok) {
-          // トークンをlocalStorageに保存
-          localStorage.setItem('access_token', data.access_token);
+          // TokenManagerを使用してトークンを保存
+          const tokenManager = new TokenManager();
+          tokenManager.saveTokens(
+            data.access_token,
+            data.refresh_token,
+            data.expires_in
+          );
 
           // 成功メッセージを表示
           errorMessage.className = 'auth-success';

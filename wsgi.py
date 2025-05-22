@@ -49,6 +49,12 @@ MAX_TOKENS_OUTPUT = 512
 SAFETY_MARGIN = 500
 OPENROUTER_MODELS = ["anthropic/claude-3.7-sonnet"]
 
+# CORS設定
+CORS_ORIGINS = os.getenv("CORS_ORIGINS").split(",")
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS").lower() == "true"
+CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS").split(",")
+CORS_ALLOW_HEADERS = os.getenv("CORS_ALLOW_HEADERS").split(",")
+
 # ディレクトリの作成
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -94,10 +100,10 @@ app.add_middleware(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
 )
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -1,7 +1,6 @@
 import os
-import json
 import logging
-from typing import AsyncGenerator, Dict, Any, Optional
+from typing import AsyncGenerator, Optional, List, Dict
 from colorama import Fore, Style
 from openai import AsyncOpenAI
 from datetime import datetime
@@ -122,6 +121,50 @@ class AIOpenRouterStreamClient:
         else:
             logging.error(f"Unsupported provider: {provider}")
             raise ValueError(f"Provider {provider} is not supported")
+        
+    async def type_response(
+            self,
+            input: str,
+            threads: List[Dict[str, str]],
+            model: str = "openai/gpt-4.1",
+            max_tokens: int = 4000
+    ) -> AsyncGenerator[str, None]:
+        """ユーザーの入力に対する応答を生成"""
+        try:
+            response = await self.openrouter_client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": f"""Classify the intention of the next utterance using a one-word label. Based on the recent conversation with users {threads}"""},
+                    {"role": "user", "content": input}
+                ],
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"Error generating type response: {str(e)}")
+            raise e
+        
+    async def content_response(
+        self,
+        input: str,
+        threads: List[Dict[str, str]],
+        model: str = "openai/gpt-4.1",
+        max_tokens: int = 4000
+    ) -> AsyncGenerator[str, None]:
+        """ユーザーの入力に対する応答を生成"""
+        try:
+            response = await self.openrouter_client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": f"""Summarize the main point of the following utterance in one sentence, clearly identifying the subject and purpose. Based on the recent conversation with users {threads}"""},
+                    {"role": "user", "content": input}
+                ],
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"Error generating content response: {str(e)}")
+            raise e
 
 # 使用例:
 # ai_client = AIStreamClient(anthropic_client, openrouter_client)

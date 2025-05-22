@@ -1522,6 +1522,183 @@ async def mobility_chat(
             content={"error": str(e), "details": error_details},
             status_code=500
         )
+    
+
+@app.post("/message_chat")
+async def message_chat(
+    request: Request, 
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user), 
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        user_id = current_user.id
+        
+        # チャットデータの取得
+        history, summary, user_history, thread_history = await chatroom_manager.get_chat_data(user_id)
+        
+        threads = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history]
+        if summary and len(summary) > 0:
+            summary_content = summary[0]["content"]
+        else:
+            summary_content = "" 
+        last_conversation = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history[-2:]]
+        
+        # ユーザー入力の取得
+        data = await request.json()
+        user_input = data.get("message", "")
+        print(f"User input: {user_input[:50]}...")
+        try:
+            user_type_response = await openrouter_client.chat.completions.create(
+                model="openai/gpt-4.1",
+                messages=[
+                    {"role": "system", "content": f"""Classify the intention of the next utterance using a one-word label. Based on the recent conversation with users
+        {threads}"""},
+                    {"role": "user", "content": user_input} 
+                ],
+                max_tokens=4000,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+        try:
+            user_content_response = await openrouter_client.chat.completions.create(
+                model="openai/gpt-4.1",
+                messages=[
+                    {"role": "system", "content": f"""Summarize the main point of the following utterance in one sentence, clearly identifying the subject and purpose. Based on the recent conversation with users
+        {threads}"""},
+                    {"role": "user", "content": user_input} 
+                ],
+                max_tokens=4000,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+        
+        print("Type response:", user_type_response.choices[0].message.content)
+        print("Content response:", user_content_response.choices[0].message.content)
+        # ユーザーメッセージの追加
+        user_message = {
+            "role": "user", 
+            "content": user_input, 
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        }
+        user_thread = {
+            "role": "user", 
+            "type": user_type_response.choices[0].message.content,
+            "content": user_content_response.choices[0].message.content, 
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        await chatroom_manager.add_message(user_id, user_message)
+        await chatroom_manager.add_thread(user_id, user_thread)
+        
+        base_prompt = "you are helpful AI assistant"
+        
+        threads = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history]
+        if summary and len(summary) > 0:
+            summary_content = summary[0]["content"]
+        else:
+            summary_content = "" 
+        last_conversation = [{"role": msg["role"], "content": msg["content"]} for msg in thread_history[-2:]]
+        # システムプロンプトの構築
+        system_prompt = f"""
+        {base_prompt}
+
+        ---
+        ###Summary of conversation
+        {summary_content}
+        ###Recent conversation with users
+        {threads}
+        ###Last conversation with users
+        {last_conversation}
+        """
+        print(system_prompt)
+        async def generate():
+            """ストリーミングレスポンスを生成する非同期ジェネレータ"""
+            resp = ""
+            try:
+                # AIからのストリーミングレスポンスを取得
+                async for text in openrouter_stream_client.stream_response(user_content_response.choices[0].message.content, system_prompt):
+                    if isinstance(text, dict) and "error" in text:
+                        yield f"data: {json.dumps(text)}\n\n"
+                        return
+                    resp += text
+                    yield f"data: {json.dumps({'text': text})}\n\n"
+                
+                # アシスタントの応答を保存
+                assistant_text = resp
+                assistant_message = {
+                    "role": "assistant", 
+                    "content": assistant_text, 
+                    "user_id": user_id,
+                    "id": str(uuid.uuid4()),
+                    "timestamp": datetime.now().isoformat()
+                }
+                try:
+                    assistant_type_response = await openrouter_client.chat.completions.create(
+                        model="openai/gpt-4.1",
+                        messages=[
+                            {"role": "system", "content": "Classify the intention of the next utterance using a one-word label."},
+                            {"role": "user", "content": assistant_text} 
+                        ],
+                        max_tokens=4000,
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                try:
+                    assistant_content_response = await openrouter_client.chat.completions.create(
+                        model="openai/gpt-4.1",
+                        messages=[
+                            {"role": "system", "content": "Summarize the main point of the following utterance in one sentence, clearly identifying the subject and purpose."},
+                            {"role": "user", "content": assistant_text} 
+                        ],
+                        max_tokens=4000,
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                assistant_thread = {
+                    "role": "assistant", 
+                    "type": assistant_type_response.choices[0].message.content,
+                    "content": assistant_content_response.choices[0].message.content, 
+                    "user_id": user_id,
+                    "id": str(uuid.uuid4()),
+                    "timestamp": datetime.now().isoformat()
+                }
+                await chatroom_manager.add_message(user_id, assistant_message)
+                await chatroom_manager.add_thread(user_id, assistant_thread)
+                
+                message_pair = {
+                    "user": user_thread,
+                    "assistant": assistant_thread,
+                    "timestamp": datetime.now().isoformat()
+                }
+                await chatroom_manager.update_user_messages(user_id, message_pair)
+                
+                # 定期的にバックグラウンドでサマリーを更新
+                if len(history) % 7 == 0:
+                    background_tasks.add_task(
+                        generate_summary_task, 
+                        await to_pretty_json(history),
+                        user_id
+                    )
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                error_details = traceback.format_exc()
+                print(f"Error in chat: {str(e)}\n{error_details}")
+        
+        return StreamingResponse(generate(), media_type="text/event-stream")
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error in chat: {str(e)}\n{error_details}")
+        return JSONResponse(
+            content={"error": str(e), "details": error_details},
+            status_code=500
+        )
 
 
 @app.post("/clear")

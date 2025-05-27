@@ -1,59 +1,103 @@
-# ファイナンス アドバイザリー プロジェクト
+# Finance Advisory Project
 
-## プロジェクト概要
-このアプリケーションは、高度な財務アドバイスと分析を提供するAIベースのファイナンスツールです。
+AIを活用した金融アドバイザリーシステム。Claude 3.7 SonnetやGPT-4などの大規模言語モデルを使用して、金融に関する質問に回答し、アドバイスを提供します。
 
-## 必要条件
-- Python 3.8+
-- pip
-- 仮想環境 (venv または conda)
+## 機能
 
-## セットアップ手順
+- AIを活用した金融アドバイス
+- 複数のAIプロバイダー（Anthropic Claude、OpenAI GPT）のサポート
+- ユーザー認証システム
+- チャット履歴の保存と管理
+- 非同期タスク処理（Celery）
+- RESTful API
+- フロントエンドインターフェース
 
-1. リポジトリをクローン
+## 技術スタック
+
+- **バックエンド**: Python, Flask, FastAPI
+- **データベース**: PostgreSQL
+- **AI/ML**: Anthropic Claude, OpenAI GPT
+- **タスクキュー**: Celery, Redis
+- **認証**: JWT
+- **その他**: LangChain, SQLAlchemy
+
+## セットアップ
+
+1. リポジトリのクローン
 ```bash
-git clone https://github.com/your-username/finance-advisory-project.git
+git clone [repository-url]
 cd finance-advisory-project
 ```
 
-2. 仮想環境を作成と有効化
+2. 仮想環境の作成と有効化
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
+python -m venv venv
+source venv/bin/activate  # Linuxの場合
 # または
-venv\Scripts\activate  # Windows
+.\venv\Scripts\activate  # Windowsの場合
 ```
 
-3. 依存関係をインストール
+3. 依存関係のインストール
 ```bash
 pip install -r requirements.txt
 ```
 
-4. アプリケーションの起動
-```bash
-# メインアプリケーションを起動
-python wsgi.py
-
-# バックグラウンドワーカーを別のターミナルで起動
-celery -A worker worker --loglevel=info
+4. 環境変数の設定
+`.env`ファイルを作成し、以下の変数を設定：
+```
+ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
+DEBUG=True
+HOST=0.0.0.0
+PORT=5001
 ```
 
-## 主な機能
-- AIを活用した財務アドバイス
-- リアルタイムの財務分析
-- インタラクティブな投資シミュレーション
+5. データベースのセットアップ
+```bash
+flask db upgrade
+```
 
-## 技術スタック
-- FastAPI
-- Celery
-- OpenAI API
-- SQLAlchemy
+6. アプリケーションの起動
+```bash
+python wsgi.py
+```
+
+## プロジェクト構造
+
+```
+finance-advisory-project/
+├── api/            # APIエンドポイント
+├── auth/           # 認証関連
+├── models/         # データベースモデル
+├── templates/      # HTMLテンプレート
+├── static/         # 静的ファイル
+├── utils/          # ユーティリティ関数
+├── prompts/        # AIプロンプト
+├── data/           # データファイル
+├── migrations/     # データベースマイグレーション
+├── app.py          # アプリケーションエントリーポイント
+├── config.py       # 設定ファイル
+├── database.py     # データベース設定
+├── requirements.txt # 依存関係
+└── wsgi.py         # WSGIサーバー設定
+```
+
+## 環境変数
+
+主要な環境変数：
+- `ANTHROPIC_API_KEY`: Anthropic APIキー
+- `OPENAI_API_KEY`: OpenAI APIキー
+- `DEBUG`: デバッグモード（True/False）
+- `HOST`: ホストアドレス
+- `PORT`: ポート番号
+- `DEFAULT_AI_PROVIDER`: デフォルトのAIプロバイダー
+- `MAX_TOKENS`: 最大トークン数
+- `MAX_RETRIES`: 最大リトライ回数
 
 ## ライセンス
-[適切なライセンスを追加]
+
+[ライセンス情報を追加]
 
 ## 貢献
-プルリクエストは歓迎します。大きな変更を行う前に、まずissueで議論してください。
 
-## 注意
-本アプリケーションは参考情報のみを提供し、専門的な財務アドバイスの代替とはなりません。投資判断は慎重に行ってください。
+[貢献ガイドラインを追加]

@@ -103,10 +103,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 情報連携ボタン (Step 0 -> Step 1)
   if (connectInfoBtn) {
-    connectInfoBtn.addEventListener('click', () => {
-      currentStep = 1;
-      updateStepVisibility();
-      appendMessage('bot', 'CRM情報の連携が完了しました。顧客の基本情報に入力をお願いします。名前と年齢は必須項目となっています。');
+    connectInfoBtn.addEventListener('click', async () => {
+      try {
+        // Salesforce IDを取得
+        const cifField = document.getElementById('cif');
+        const salesforceId = cifField.value.trim();
+        
+        if (!salesforceId) {
+          alert('Salesforce IDを入力してください。');
+          cifField.focus();
+          return;
+        }
+        
+        // ダミーデータを取得
+        const response = await fetch('/static/crm_dummy_data/mobility_dummy_data.json');
+        if (!response.ok) {
+          throw new Error('ダミーデータの取得に失敗しました');
+        }
+        
+        const dummyData = await response.json();
+        const customerData = dummyData[salesforceId];
+        
+        if (!customerData) {
+          alert('指定されたSalesforce IDのデータが見つかりません。');
+          return;
+        }
+        
+        // フォームフィールドに自動入力
+        fillFormFields(customerData);
+        
+        // Step 1に進む
+        currentStep = 1;
+        updateStepVisibility();
+        appendMessage('bot', `CRM情報の連携が完了しました。${customerData.name}様の情報を自動入力いたしました。内容をご確認の上、必要に応じて修正してください。`);
+        
+      } catch (error) {
+        console.error('CRM連携エラー:', error);
+        alert('CRM情報の連携中にエラーが発生しました。再度お試しください。');
+      }
     });
   }
 
@@ -1044,4 +1078,47 @@ function updatePaymentCalculation() {
       rows[3].textContent = 'ローン金額　　　' + loanAmount.toLocaleString() + '円';
     }
   }
+}
+
+// フォームフィールドに自動入力する関数
+function fillFormFields(customerData) {
+  // Step 1: 顧客の基本情報
+  if (customerData.name) document.getElementById('name').value = customerData.name;
+  if (customerData.age) document.getElementById('age').value = customerData.age;
+  if (customerData.dealer) document.getElementById('dealer').value = customerData.dealer;
+  if (customerData.phone) document.getElementById('phone').value = customerData.phone;
+  if (customerData.family_size) document.getElementById('family-size').value = customerData.family_size;
+  if (customerData.hobby) document.getElementById('hobby').value = customerData.hobby;
+  if (customerData.next_car) document.getElementById('next-car').value = customerData.next_car;
+  if (customerData.insurance) document.getElementById('insurance').value = customerData.insurance;
+  if (customerData.insurance_company) document.getElementById('insurance-company').value = customerData.insurance_company;
+  if (customerData.insurance_type) document.getElementById('insurance-type').value = customerData.insurance_type;
+  if (customerData.insurance_rank) document.getElementById('insurance-rank').value = customerData.insurance_rank;
+  if (customerData.accident_category) document.getElementById('accident-category').value = customerData.accident_category;
+
+  // Step 3: 家計状況
+  if (customerData.housing_loan) document.getElementById('housing-loan').value = customerData.housing_loan;
+  if (customerData.household_income) document.getElementById('household-income').value = customerData.household_income;
+
+  // Step 4: 車両情報
+  if (customerData.car_type) document.getElementById('car-type').value = customerData.car_type;
+  if (customerData.car_year) document.getElementById('car-year').value = customerData.car_year;
+  if (customerData.inspection_date) document.getElementById('inspection-date').value = customerData.inspection_date;
+  if (customerData.mileage) document.getElementById('mileage').value = customerData.mileage;
+  if (customerData.car_number) document.getElementById('car-number').value = customerData.car_number;
+  if (customerData.service_history) document.getElementById('service-history').value = customerData.service_history;
+  if (customerData.car_color) document.getElementById('car-color').value = customerData.car_color;
+
+  // Step 5: 車両コスト比較
+  if (customerData.current_car_type) document.getElementById('current-car-type').value = customerData.current_car_type;
+  if (customerData.current_car_model) document.getElementById('current-car-model').value = customerData.current_car_model;
+  if (customerData.annual_mileage) document.getElementById('annual-mileage').value = customerData.annual_mileage;
+  if (customerData.car_tax) document.getElementById('car-tax').value = customerData.car_tax;
+  if (customerData.inspection_cost) document.getElementById('inspection-cost').value = customerData.inspection_cost;
+  if (customerData.compare_car_type) document.getElementById('compare-car-type').value = customerData.compare_car_type;
+  if (customerData.compare_car_tax) document.getElementById('compare-car-tax').value = customerData.compare_car_tax;
+  if (customerData.compare_inspection_cost) document.getElementById('compare-inspection-cost').value = customerData.compare_inspection_cost;
+  if (customerData.preferred_maker) document.getElementById('preferred-maker').value = customerData.preferred_maker;
+  if (customerData.preferred_car_type) document.getElementById('preferred-car-type').value = customerData.preferred_car_type;
+  if (customerData.preferred_car_model) document.getElementById('preferred-car-model').value = customerData.preferred_car_model;
 }

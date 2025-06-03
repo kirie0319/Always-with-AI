@@ -16,7 +16,13 @@
     "current_car_model": "NHP10",
     "annual_mileage": 1.2,
     "car_tax": 12.8,
-    "inspection_cost": 24
+    "inspection_cost": 24,
+    "compare_car_type": "ヴォクシー",
+    "compare_car_tax": 13.6,
+    "compare_inspection_cost": 28,
+    "preferred_maker": "トヨタ",
+    "preferred_car_type": "ヴォクシー",
+    "preferred_car_model": "ZRR80"
   },
   "1234567890123": {
     "name": "佐藤 花子",

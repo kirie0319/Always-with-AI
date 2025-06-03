@@ -1,3 +1,245 @@
+// Configuration object (similar to financial config.js)
+const config = {
+  // API関連
+  apiBaseUrl: '',
+  endpoints: {
+    crmData: '/mobility/crm-data/',
+    formSubmit: '/mobility/submit',
+    conversationHistory: '/conversation_history',
+    chat: '/mobility_chat',
+    validateToken: '/validate-token',
+    refreshToken: '/refresh-token',
+    clear: '/clear'
+  },
+
+  // UI関連
+  defaultStep: 0,
+  
+  // ローカルストレージキー
+  storageKeys: {
+    accessToken: 'access_token',
+    refreshToken: 'refresh_token',
+    tokenExpiry: 'token_expiry',
+    selectedPromptName: 'selectedPromptName'
+  }
+};
+
+/**
+ * トークン管理クラス
+ */
+class TokenManager {
+    constructor() {
+        this.accessTokenKey = config.storageKeys.accessToken;
+        this.refreshTokenKey = config.storageKeys.refreshToken;
+        this.tokenExpiryKey = config.storageKeys.tokenExpiry;
+    }
+
+    // トークンを保存
+    saveTokens(accessToken, refreshToken, expiresIn) {
+        const expiryTime = Date.now() + (expiresIn * 1000);
+        
+        localStorage.setItem(this.accessTokenKey, accessToken);
+        localStorage.setItem(this.refreshTokenKey, refreshToken);
+        localStorage.setItem(this.tokenExpiryKey, expiryTime.toString());
+        
+        console.log('Tokens saved:', {
+            accessToken: accessToken.substring(0, 10) + '...',
+            refreshToken: refreshToken.substring(0, 10) + '...',
+            expiryTime: new Date(expiryTime).toISOString()
+        });
+    }
+
+    // アクセストークンを取得
+    getAccessToken() {
+        return localStorage.getItem(this.accessTokenKey);
+    }
+
+    // リフレッシュトークンを取得
+    getRefreshToken() {
+        return localStorage.getItem(this.refreshTokenKey);
+    }
+
+    // トークンをクリア
+    clearTokens() {
+        localStorage.removeItem(this.accessTokenKey);
+        localStorage.removeItem(this.refreshTokenKey);
+        localStorage.removeItem(this.tokenExpiryKey);
+        console.log('All tokens cleared');
+    }
+
+    // トークンの有効期限チェック
+    isTokenExpired() {
+        const expiryTime = localStorage.getItem(this.tokenExpiryKey);
+        const isExpired = !expiryTime || Date.now() >= parseInt(expiryTime);
+        console.log('Token expiry check:', {
+            expiryTime: expiryTime ? new Date(parseInt(expiryTime)).toISOString() : null,
+            currentTime: new Date().toISOString(),
+            isExpired
+        });
+        return isExpired;
+    }
+
+    // トークンの更新が必要かチェック
+    shouldRefreshToken() {
+        const expiryTime = localStorage.getItem(this.tokenExpiryKey);
+        const shouldRefresh = !expiryTime || Date.now() >= (parseInt(expiryTime) - 5 * 60 * 1000);
+        console.log('Should refresh token check:', {
+            expiryTime: expiryTime ? new Date(parseInt(expiryTime)).toISOString() : null,
+            currentTime: new Date().toISOString(),
+            shouldRefresh
+        });
+        return shouldRefresh;
+    }
+}
+
+// TokenManagerのインスタンスを作成
+const tokenManager = new TokenManager();
+
+/**
+ * 認証ヘッダーを取得する関数
+ */
+function getAuthHeaders() {
+  const token = tokenManager.getAccessToken();
+  return token ? {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  } : {
+    'Content-Type': 'application/json'
+  };
+}
+
+/**
+ * トークンを検証する関数
+ */
+async function validateToken() {
+  try {
+    const token = tokenManager.getAccessToken();
+    if (!token) {
+      throw new Error('アクセストークンがありません');
+    }
+    
+    const response = await fetch(config.endpoints.validateToken, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('トークン検証に失敗しました');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('トークン検証エラー:', error);
+    throw error;
+  }
+}
+
+/**
+ * リフレッシュトークンを使用してアクセストークンを更新
+ */
+async function refreshAccessToken(retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000;
+
+    try {
+        const refreshToken = tokenManager.getRefreshToken();
+        if (!refreshToken) {
+            throw new Error('リフレッシュトークンがありません');
+        }
+
+        console.log('Refreshing access token...');
+        const response = await fetch(config.endpoints.refreshToken, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Token refresh failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Token refresh successful:', {
+            access_token: data.access_token ? data.access_token.substring(0, 10) + '...' : null,
+            refresh_token: data.refresh_token ? data.refresh_token.substring(0, 10) + '...' : null,
+            expires_in: data.expires_in
+        });
+
+        // 新しいトークンを保存
+        tokenManager.saveTokens(
+            data.access_token,
+            data.refresh_token,
+            data.expires_in
+        );
+
+        return data;
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        if (retryCount < MAX_RETRIES) {
+            console.log(`Token refresh error, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            return refreshAccessToken(retryCount + 1);
+        }
+        tokenManager.clearTokens();
+        window.location.href = '/login?session_expired=true';
+        throw error;
+    }
+}
+
+/**
+ * 定期的なトークン更新チェック
+ */
+function startTokenRefreshCheck() {
+    setInterval(async () => {
+        if (tokenManager.shouldRefreshToken()) {
+            try {
+                await refreshAccessToken();
+            } catch (error) {
+                console.error('Token refresh check error:', error);
+                // エラーが発生しても即座にログアウトせず、次のチェックを待つ
+            }
+        }
+    }, 30000); // 30秒ごとにチェック
+}
+
+/**
+ * トークンの有効性をチェック
+ */
+function isTokenValid() {
+    return !tokenManager.isTokenExpired();
+}
+
+/**
+ * アクセストークンの検証
+ */
+function validateSessionToken() {
+  const token = tokenManager.getAccessToken();
+  if (!token) {
+    console.error('アクセストークンがありません。ログインページにリダイレクトします。');
+    window.location.href = '/login';
+    return;
+  }
+  
+  console.log('アクセストークンが見つかりました。トークンの最初の10文字: ' + token.substring(0, 10) + '...');
+
+  validateToken()
+    .then(data => {
+      console.log('トークン検証成功:', data);
+      // トークン検証成功後、定期的なリフレッシュチェックを開始
+      startTokenRefreshCheck();
+    })
+    .catch(error => {
+      console.error('トークン検証エラー:', error);
+      // トークンが無効な場合はログインページにリダイレクト
+      tokenManager.clearTokens();
+      window.location.href = '/login?invalid_token=true';
+    });
+}
+
 // DOM elements
 const chatBox = document.getElementById('chat-box');
 const inputField = document.getElementById('input');
@@ -45,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   sendButton.addEventListener('click', send);
 
   // セッションストレージから選択中のプロンプト名を取得して表示
-  const selectedPromptName = sessionStorage.getItem('selectedPromptName');
+  const selectedPromptName = sessionStorage.getItem(config.storageKeys.selectedPromptName);
   if (selectedPromptName) {
     promptNameElement.textContent = selectedPromptName;
   }
@@ -332,37 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // トークン認証の確認
-  const token = localStorage.getItem('access_token');
-  if (!token) {
-    console.error('アクセストークンがありません。ログインページにリダイレクトします。');
-    window.location.href = '/login';
-  } else {
-    console.log('アクセストークンが見つかりました。トークンの最初の10文字: ' + token.substring(0, 10) + '...');
-
-    // トークンの検証リクエストを送信
-    fetch('/validate-token', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('トークン検証に失敗しました');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('トークン検証成功:', data);
-      })
-      .catch(error => {
-        console.error('トークン検証エラー:', error);
-        // トークンが無効な場合はログインページにリダイレクト
-        localStorage.removeItem('access_token');
-        window.location.href = '/login?invalid_token=true';
-      });
-  }
+  // トークン認証の確認（新しい実装）
+  validateSessionToken();
 });
 
 // ステップの表示/非表示を更新する関数
@@ -550,21 +763,10 @@ function removeTypingIndicator() {
   }
 }
 
-// Function to get auth headers
-function getAuthHeaders() {
-  const token = localStorage.getItem('access_token');
-  return token ? {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  } : {
-    'Content-Type': 'application/json'
-  };
-}
-
 // Function to load conversation history
 async function loadConversationHistory() {
   try {
-    const response = await fetch('/conversation_history', {
+    const response = await fetch(config.endpoints.conversationHistory, {
       method: 'GET',
       headers: getAuthHeaders()
     });
@@ -606,7 +808,7 @@ async function send() {
 
   try {
     // POSTリクエスト
-    const response = await fetch('/mobility_chat', {
+    const response = await fetch(config.endpoints.chat, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ message: text })
@@ -772,7 +974,7 @@ function clearChat() {
   if (!confirm('チャット履歴をクリアしますか？')) return;
 
   try {
-    fetch('/clear', {
+    fetch(config.endpoints.clear, {
       method: 'POST',
       headers: getAuthHeaders()
     })

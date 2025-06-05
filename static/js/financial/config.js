@@ -9,7 +9,7 @@ const config = {
       crmData: '/financial/crm-data/',
       formSubmit: '/financial/submit',
       conversationHistory: '/conversation_history',
-      chat: '/chat',
+      chat: '/mobility_chat',
       langchainChat: '/langchain_chat',
       validateToken: '/validate-token',
       clear: '/clear'

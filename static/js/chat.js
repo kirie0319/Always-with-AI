@@ -251,8 +251,8 @@ async function send() {
   const typingIndicator = showTyping();
 
   try {
-    // POSTリクエスト
-    const response = await fetch('/chat', {
+    // POSTリクエスト - プロンプトを使用するエンドポイントに変更
+    const response = await fetch('/mobility_chat', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ message: text })

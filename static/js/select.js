@@ -76,18 +76,25 @@ document.addEventListener('DOMContentLoaded', function () {
       const response = await fetch('/api/select-prompt', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ prompt_id: promptId })
       });
 
       if (!response.ok) {
-        throw new Error('プロンプトの選択に失敗しました');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'プロンプトの選択に失敗しました');
       }
 
       const data = await response.json();
 
       if (data.success) {
+        // セッションストレージに選択したプロンプトIDを保存
+        sessionStorage.setItem('selectedPromptId', promptId);
+        sessionStorage.setItem('selectedPromptName', data.prompt_name);
+
         // 選択成功
         alert(`プロンプト「${data.prompt_name}」を選択しました`);
 
@@ -99,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     } catch (error) {
       console.error('エラー:', error);
-      alert('プロンプトの選択中にエラーが発生しました');
+      alert(`エラーが発生しました: ${error.message}`);
     }
   }
 

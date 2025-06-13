@@ -1,1 +1,24 @@
-{}
+{
+  "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392": {
+    "created_at": "2025-06-13T15:38:12.584339",
+    "messages": [
+      [
+        {
+          "role": "user",
+          "type": "Greeting",
+          "content": "Subject: User\nPurpose: The user greets the assistant with \"こんにちは\" (Hello) to initiate a conversation.",
+          "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
+          "timestamp": "2025-06-13T15:38:06.406509"
+        },
+        {
+          "role": "assistant",
+          "type": "Greeting",
+          "content": "The subject is Baymax, an AI healthcare companion, and the purpose is to politely ask the user to rate their pain level from 1 to 10.",
+          "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
+          "id": "327f9aad-2be9-47ca-a132-6c0b62fd7ffd",
+          "timestamp": "2025-06-13T15:38:12.583286"
+        }
+      ]
+    ]
+  }
+}

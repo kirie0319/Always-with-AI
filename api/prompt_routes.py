@@ -104,31 +104,40 @@ async def get_prompt_api(prompt_id: int, db: AsyncSession = Depends(get_db)):
     })
 
 @router.post("/api/select-prompt")
-async def select_prompt_api(request: Request, db: AsyncSession = Depends(get_db)):
-    data = await request.json()
-    prompt_id = data.get("prompt_id")
+async def select_prompt_api(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    try:
+        data = await request.json()
+        prompt_id = data.get("prompt_id")
 
-    if not prompt_id:
-        return JSONResponse(
-            content={"success": False, "message": "プロンプトIDが指定されていません"},
-            status_code=400
+        if not prompt_id:
+            raise HTTPException(
+                status_code=400,
+                detail="プロンプトIDが指定されていません"
+            )
+
+        result = await db.execute(select(Prompt).where(Prompt.id == int(prompt_id)))
+        prompt = result.scalar_one_or_none()
+        
+        if not prompt:
+            raise HTTPException(
+                status_code=404,
+                detail="指定されたプロンプトが見つかりません"
+            )
+
+        print(f"selected_prompt_idを{prompt_id}に設定します")
+        request.session["selected_prompt_id"] = str(prompt_id)
+        request.session["selected_prompt_name"] = prompt.name
+        
+        return JSONResponse(content={
+            "success": True,
+            "prompt_id": prompt_id,
+            "prompt_name": prompt.name 
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"サーバーエラーが発生しました: {str(e)}"
         )
-
-    result = await db.execute(select(Prompt).where(Prompt.id == int(prompt_id)))
-    prompt = result.scalar_one_or_none()
-    
-    if not prompt:
-        return JSONResponse(
-            content={"success": False, "message": "プロンプトが見つかりません"},
-            status_code=404
-        )
-
-    print(f"selected_prompt_idを{prompt_id}に設定します")
-    request.session["selected_prompt_id"] = prompt_id
-    request.session["selected_prompt_name"] = prompt.name
-
-    return JSONResponse(content={
-        "success": True,
-        "prompt_id": prompt_id,
-        "prompt_name": prompt.name 
-    })

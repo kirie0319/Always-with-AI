@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def make_celery(app_name=__name__):
-  print("BROKER:", os.getenv("CELERY_BROKER_URL"))
-  print("BACKEND:", os.getenv("CELERY_RESULT_BACKEND"))
   return Celery(
     app_name,
     broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),

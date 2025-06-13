@@ -34,11 +34,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
   else: 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   to_encode.update({"exp": expire})
-  print(f"\n=== Token Creation Debug ===")
-  print(f"Expiry time: {expire}")
-  print(f"Data to encode: {to_encode}")
   encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-  print(f"=== Token Creation Complete ===\n")
   return encode_jwt
 
 def create_refresh_token(data: dict):
@@ -49,9 +45,6 @@ def create_refresh_token(data: dict):
 
 def create_tokens(data: dict):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    print(f"\n=== Token Creation Process ===")
-    print(f"Access token expiry minutes: {ACCESS_TOKEN_EXPIRE_MINUTES}")
-    print(f"Data for token: {data}")
     access_token = create_access_token(
         data=data,
         expires_delta=access_token_expires
@@ -62,14 +55,9 @@ def create_tokens(data: dict):
         "refresh_token": refresh_token,
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
     }
-    print(f"Created tokens with expiry: {ACCESS_TOKEN_EXPIRE_MINUTES * 60} seconds")
-    print(f"=== Token Creation Process Complete ===\n")
     return tokens
 
 async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_db)):
-  print("\n=== Token Validation Debug ===")
-  print(f"Token received: {token}")
-  print(f"Token length: {len(token) if token else 0}")
   
   credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -82,18 +70,14 @@ async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession
     raise credentials_exception
     
   try:
-    print(f"Using SECRET_KEY: {SECRET_KEY[:3] if SECRET_KEY else 'None'}...")
     if not SECRET_KEY:
-      print("Error: SECRET_KEY not set")
       raise credentials_exception
       
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    print(f"Decoded payload: {payload}")
     username: str = payload.get("sub")
     if username is None:
-      print("Error: 'sub' field missing in payload")
+      print("Error: 'sub' field missing in paylßoad")
       raise credentials_exception
-    print(f"Username from token: {username}")
   except JWTError as e:
     print(f"JWT Error: {str(e)}")
     print(f"JWT Error type: {type(e)}")
@@ -106,8 +90,6 @@ async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession
   if user is None:
     print(f"Error: User '{username}' not found in database")
     raise credentials_exception
-  print(f"User found: ID={user.id}, username={user.username}")
-  print("=== Token Validation Complete ===\n")
   return user
 
 async def refresh_token(refresh_token: str):

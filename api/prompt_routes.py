@@ -85,6 +85,31 @@ async def select_prompt_page(request: Request, db: AsyncSession = Depends(get_db
     prompts = result.scalars().all()
     return templates.TemplateResponse("components/select.html", {"request": request, "prompts": prompts})
 
+@router.get("/api/prompts")
+async def get_prompts_api(db: AsyncSession = Depends(get_db)):
+    """プロンプト一覧をJSON形式で取得"""
+    try:
+        result = await db.execute(select(Prompt))
+        prompts = result.scalars().all()
+        
+        return JSONResponse(content={
+            "success": True,
+            "prompts": [
+                {
+                    "id": prompt.id,
+                    "title": prompt.name,
+                    "description": prompt.description,
+                    "content": prompt.content
+                }
+                for prompt in prompts
+            ]
+        })
+    except Exception as e:
+        return JSONResponse(
+            content={"success": False, "error": f"プロンプト取得エラー: {str(e)}"},
+            status_code=500
+        )
+
 @router.get("/api/prompt/{prompt_id}")
 async def get_prompt_api(prompt_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Prompt).where(Prompt.id == int(prompt_id)))

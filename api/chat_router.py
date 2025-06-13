@@ -219,7 +219,7 @@ async def message_chat(
             resp = ""
             try:
                 # AIからのストリーミングレスポンスを取得
-                async for text in openrouter_stream_client.stream_response(user_content_response, system_prompt):
+                async for text in openrouter_stream_client.stream_response(user_input, system_prompt):
                     if isinstance(text, dict) and "error" in text:
                         yield f"data: {json.dumps(text)}\n\n"
                         return

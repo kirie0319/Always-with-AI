@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from database import get_db
 from models.users import User 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY") or "always-ai-development-secret-key-2024"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -68,14 +68,25 @@ def create_tokens(data: dict):
 
 async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_db)):
   print("\n=== Token Validation Debug ===")
-  print(f"Token received: {token[:10]}...")
+  print(f"Token received: {token}")
+  print(f"Token length: {len(token) if token else 0}")
+  
   credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="認証情報が無効です",
     headers={"WWW-Authenticate": "Bearer"},
   )
+  
+  if not token:
+    print("Error: No token provided")
+    raise credentials_exception
+    
   try:
-    print(f"Using SECRET_KEY: {SECRET_KEY[:3]}...")
+    print(f"Using SECRET_KEY: {SECRET_KEY[:3] if SECRET_KEY else 'None'}...")
+    if not SECRET_KEY:
+      print("Error: SECRET_KEY not set")
+      raise credentials_exception
+      
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     print(f"Decoded payload: {payload}")
     username: str = payload.get("sub")
@@ -85,6 +96,7 @@ async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession
     print(f"Username from token: {username}")
   except JWTError as e:
     print(f"JWT Error: {str(e)}")
+    print(f"JWT Error type: {type(e)}")
     raise credentials_exception
 
   stmt = select(User).where(User.username == username)

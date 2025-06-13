@@ -50,10 +50,10 @@ SAFETY_MARGIN = 500
 OPENROUTER_MODELS = ["anthropic/claude-3.7-sonnet"]
 
 # CORS設定
-CORS_ORIGINS = os.getenv("CORS_ORIGINS").split(",")
-CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS").lower() == "true"
-CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS").split(",")
-CORS_ALLOW_HEADERS = os.getenv("CORS_ALLOW_HEADERS").split(",")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS").split(",")
+CORS_ALLOW_HEADERS = os.getenv("CORS_ALLOW_HEADERS", "Authorization,Content-Type,Accept,Origin,User-Agent,DNT,Cache-Control,X-Mx-ReqToken,Keep-Alive,X-Requested-With,If-Modified-Since").split(",")
 
 # ディレクトリの作成
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -1327,7 +1327,7 @@ async def mobility_chat(
             resp = ""
             try:
                 # AIからのストリーミングレスポンスを取得
-                async for text in openrouter_stream_client.stream_response(user_content_response.choices[0].message.content, system_prompt):
+                async for text in openrouter_stream_client.stream_response(user_input, system_prompt):
                     if isinstance(text, dict) and "error" in text:
                         yield f"data: {json.dumps(text)}\n\n"
                         return

@@ -299,8 +299,8 @@ async def submit_financial_data(
                 "function": financial_strategy_function
             }],
             tool_choice={"type": "function", "function": {"name": "create_financial_strategy"}},
-            max_tokens=4000,
-        )
+                max_tokens=4000,
+            )
         
         print("=== LLM生成結果 ===")
         print(response.choices[0].message)
@@ -350,16 +350,19 @@ async def submit_financial_data(
 現在の運用状況を分析し、3つの戦略パターンを提案してください。簡潔に要点をまとめてください。
 """
             
-            fallback_response = await openrouter_client.chat.completions.create(
-                model="openai/gpt-4o-mini",
-                messages=[{"role": "user", "content": fallback_prompt}],
-                max_tokens=2000,
-            )
-            
-            fallback_content = fallback_response.choices[0].message.content
+            try:
+                fallback_response = await openrouter_client.chat.completions.create(
+                    model="openai/gpt-4o-mini",
+                    messages=[{"role": "user", "content": fallback_prompt}],
+                    max_tokens=2000,
+                )
+                fallback_content = fallback_response.choices[0].message.content
+            except Exception as fallback_error:
+                print(f"フォールバックプロンプトも失敗: {fallback_error}")
+                fallback_content = "アドバイザーによる詳細分析を準備中です。再度お試しください。"
             
             # フォールバック - 従来の方式
-        strategy_data = {
+            strategy_data = {
                 "advisor_type": advisor_type,
                 "customer_info": customer_summary,
                 "current_analysis": {
@@ -1094,7 +1097,7 @@ async def generate_lifeplan_simulation(
                 }
                 
                 response = await openrouter_client.chat.completions.create(
-                    model="openai/gpt-4.1",
+            model="openai/gpt-4.1",
                     messages=[
                         {"role": "system", "content": "あなたは専門的なファイナンシャルプランナーです。顧客の65年間のライフプランを詳細に分析し、実用的なアドバイスを提供します。"},
                         {"role": "user", "content": prompt}
@@ -1303,7 +1306,7 @@ function callingで確実に65年分の構造化データを生成してくだ�
                 }
                 
                 response = await openrouter_client.chat.completions.create(
-                    model="openai/gpt-4.1",
+            model="openai/gpt-4.1",
                     messages=[
                         {"role": "system", "content": f"あなたは「{selected_prompt['title'] if selected_prompt else 'バランス型'}」ファイナンシャルアドバイザーです。顧客の実際の数値に基づいて、完全カスタマイズされたライフプランを65年分作成してください。"},
                         {"role": "user", "content": prompt}
@@ -1636,7 +1639,7 @@ function callingで確実に65年分の構造化データを生成してくだ�
             },
             status_code=200
         )
-        
+    
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
@@ -1646,7 +1649,7 @@ function callingで確実に65年分の構造化データを生成してくだ�
             status_code=500,
             detail=f"ライフプランシミュレーションの生成中にエラーが発生しました: {str(e)}"
         )
-
+    
 @router.get("/get-lifeplan")
 async def get_lifeplan(
     current_user: User = Depends(get_current_user)

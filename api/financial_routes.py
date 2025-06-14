@@ -1678,4 +1678,289 @@ async def get_lifeplan(
             status_code=500,
             detail=f"エラーが発生しました: {str(e)}"
         )
+
+@router.post("/financial-chat")
+async def financial_chat(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """財務データをコンテキストとした専用チャット機能"""
+    try:
+        body = await request.json()
+        user_message = body.get('message', '')
+        
+        if not user_message:
+            raise HTTPException(
+                status_code=400,
+                detail="メッセージが必要です"
+            )
+        
+        print(f"💬 財務チャット開始 - ユーザー: {current_user.username}")
+        print(f"📝 質問: {user_message}")
+        
+        # 既存の財務戦略データを取得
+        strategy_data = None
+        try:
+            strategy_cache = await load_json(f"data/strategy_{current_user.id}.json", {})
+            if strategy_cache:
+                # 最新のデータを取得
+                latest_key = max(strategy_cache.keys())
+                strategy_data = strategy_cache[latest_key]
+                print(f"✅ 戦略データ取得成功")
+        except Exception as e:
+            print(f"⚠️ 戦略データ取得失敗: {e}")
+        
+        # 既存のライフプランデータを取得
+        lifeplan_data = None
+        try:
+            lifeplan_cache = await load_json(f"data/lifeplan_{current_user.id}.json", {})
+            if lifeplan_cache:
+                # 最新のデータを取得
+                latest_key = max(lifeplan_cache.keys())
+                lifeplan_data = lifeplan_cache[latest_key]
+                print(f"✅ ライフプランデータ取得成功")
+        except Exception as e:
+            print(f"⚠️ ライフプランデータ取得失敗: {e}")
+        
+        # コンテキスト情報を構築
+        context_info = []
+        
+        if strategy_data:
+            context_info.append("## 📊 現在の投資戦略情報")
+            context_info.append(f"**アドバイザータイプ**: {strategy_data.get('advisor_type', '不明')}")
+            
+            # 現在の分析情報
+            current_analysis = strategy_data.get('current_analysis', {})
+            if current_analysis:
+                context_info.append(f"**現在の資産状況**: {current_analysis.get('description', '分析中')}")
+                context_info.append(f"**総資産額**: {current_analysis.get('total_amount', '計算中')}")
+                
+                # ポートフォリオ情報
+                portfolio = current_analysis.get('portfolio', [])
+                if portfolio:
+                    context_info.append("**現在のポートフォリオ構成**:")
+                    for item in portfolio[:5]:  # 最大5項目
+                        context_info.append(f"- {item.get('category', '')}: {item.get('amount', '')} ({item.get('notes', '')})")
+                
+                # 課題情報
+                issues = current_analysis.get('issues', [])
+                if issues:
+                    context_info.append("**主な課題**:")
+                    for issue in issues[:3]:  # 最大3項目
+                        context_info.append(f"- {issue.get('title', '')}")
+            
+            # 戦略提案情報
+            strategies = strategy_data.get('strategies', [])
+            if strategies:
+                context_info.append("**提案された戦略パターン**:")
+                for i, strategy in enumerate(strategies[:3], 1):
+                    context_info.append(f"{i}. {strategy.get('title', '')}: {strategy.get('description', '')[:100]}...")
+        
+        if lifeplan_data:
+            context_info.append("\n## 📈 ライフプランシミュレーション情報")
+            
+            # アドバイザー情報
+            advisor_info = lifeplan_data.get('advisor_info', {})
+            if advisor_info:
+                context_info.append(f"**選択アドバイザー**: {advisor_info.get('prompt_title', 'デフォルト')}")
+                context_info.append(f"**アドバイザー特徴**: {advisor_info.get('prompt_description', '')[:150]}...")
+            
+            # チャート分析情報
+            chart_summary = lifeplan_data.get('chart_summary', {})
+            if chart_summary:
+                context_info.append("**チャート分析結果**:")
+                insights = chart_summary.get('insights', {})
+                context_info.append(f"- 預金残高傾向: {insights.get('deposit_trend', '分析中')}")
+                context_info.append(f"- キャッシュフロー: {insights.get('cash_flow_pattern', '分析中')}")
+                context_info.append(f"- 注意期間: {insights.get('critical_periods', '分析中')}")
+            
+            # LLM分析情報
+            llm_analysis = lifeplan_data.get('llm_analysis', {})
+            if llm_analysis:
+                context_info.append(f"**総合評価**: {llm_analysis.get('overall_assessment', '評価中')[:200]}...")
+                
+                # リスク分析（簡潔版）
+                risks = llm_analysis.get('risk_analysis', [])
+                if risks:
+                    context_info.append("**主要リスク**:")
+                    for risk in risks[:2]:  # 最大2項目
+                        context_info.append(f"- {risk.get('period', '')}: {risk.get('description', '')[:100]}...")
+                
+                # 機会分析（簡潔版）
+                opportunities = llm_analysis.get('opportunities', [])
+                if opportunities:
+                    context_info.append("**主要機会**:")
+                    for opp in opportunities[:2]:  # 最大2項目
+                        context_info.append(f"- {opp.get('title', '')}: {opp.get('description', '')[:100]}...")
+            
+            # 年間データサンプル（最初の年と最後の年）
+            years_data = lifeplan_data.get('years_data', [])
+            if years_data and len(years_data) > 0:
+                first_year = years_data[0]
+                context_info.append("**初年度データ**:")
+                context_info.append(f"- 年齢: {first_year.get('primary_age', '?')}歳")
+                context_info.append(f"- 年収: {first_year.get('total_income', 0)/10000:.0f}万円")
+                context_info.append(f"- 年間支出: {first_year.get('total_expense', 0)/10000:.0f}万円")
+                context_info.append(f"- 貯蓄残高: {first_year.get('cash_balance', 0)/10000:.0f}万円")
+                
+                if len(years_data) > 10:
+                    mid_year = years_data[10]  # 11年目
+                    context_info.append("**11年目データ**:")
+                    context_info.append(f"- 年齢: {mid_year.get('primary_age', '?')}歳")
+                    context_info.append(f"- 貯蓄残高: {mid_year.get('cash_balance', 0)/10000:.0f}万円")
+                    context_info.append(f"- 年間収支: {mid_year.get('annual_balance', 0)/10000:.0f}万円")
+        
+        # コンテキスト情報を結合
+        financial_context = "\n".join(context_info) if context_info else "財務データがまだ生成されていません。"
+        
+        # LLMへのプロンプト作成
+        system_prompt = f"""あなたは専門的なファイナンシャルアドバイザーとして、顧客の財務状況について詳しく説明し、質問に答える役割です。
+
+以下の顧客の現在の財務データと分析結果を把握した上で、質問に答えてください：
+
+{financial_context}
+
+**回答の方針**:
+1. 上記の財務データを踏まえた具体的で実用的なアドバイスを提供
+2. 数値やデータを引用して根拠のある説明を行う
+3. 必要に応じて追加の改善提案や注意点を示す
+4. 専門用語は分かりやすく説明する
+5. 顧客の将来の安心につながる建設的な回答を心がける
+
+質問に対して、親しみやすく、かつ専門的な観点から回答してください。"""
+
+        user_prompt = f"""財務状況について以下の質問があります：
+
+{user_message}
+
+上記の私の財務データを踏まえて、具体的でわかりやすい回答をお願いします。"""
+
+        # LLMに送信
+        try:
+            response = await openrouter_client.chat.completions.create(
+                model="openai/gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=1500,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content
+            print(f"✅ LLM応答生成成功")
+            
+            # チャット履歴を保存（オプション）
+            chat_data = {
+                "timestamp": datetime.now().isoformat(),
+                "user_message": user_message,
+                "ai_response": ai_response,
+                "context_available": {
+                    "has_strategy": strategy_data is not None,
+                    "has_lifeplan": lifeplan_data is not None
+                }
+            }
+            
+            # 簡易的なチャット履歴保存
+            try:
+                chat_cache = await load_json(f"data/financial_chat_{current_user.id}.json", [])
+                chat_cache.append(chat_data)
+                # 最新20件のみ保持
+                if len(chat_cache) > 20:
+                    chat_cache = chat_cache[-20:]
+                await save_json(f"data/financial_chat_{current_user.id}.json", chat_cache)
+            except Exception as e:
+                print(f"⚠️ チャット履歴保存失敗: {e}")
+            
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "chat_response": ai_response,
+                    "has_context": strategy_data is not None or lifeplan_data is not None,
+                    "context_info": {
+                        "strategy_available": strategy_data is not None,
+                        "lifeplan_available": lifeplan_data is not None,
+                        "advisor_type": strategy_data.get('advisor_type') if strategy_data else None,
+                        "total_context_length": len(financial_context)
+                    }
+                },
+                status_code=200
+            )
+            
+        except Exception as llm_error:
+            print(f"❌ LLM応答生成エラー: {llm_error}")
+            
+            # フォールバック応答
+            fallback_response = f"""申し訳ございませんが、現在AIアドバイザーが一時的に利用できません。
+
+お客様の質問「{user_message}」について、以下の一般的な情報をお伝えします：
+
+{'✅ 投資戦略データが利用可能です' if strategy_data else '⚠️ 投資戦略データが未生成です'}
+{'✅ ライフプランデータが利用可能です' if lifeplan_data else '⚠️ ライフプランデータが未生成です'}
+
+詳細な分析については、システム管理者にお問い合わせいただくか、しばらく経ってから再度お試しください。"""
+
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "chat_response": fallback_response,
+                    "has_context": strategy_data is not None or lifeplan_data is not None,
+                    "context_info": {
+                        "strategy_available": strategy_data is not None,
+                        "lifeplan_available": lifeplan_data is not None,
+                        "is_fallback": True
+                    }
+                },
+                status_code=200
+            )
+    
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"財務チャットエラー: {e}")
+        print(error_details)
+        raise HTTPException(
+            status_code=500,
+            detail=f"財務チャット処理中にエラーが発生しました: {str(e)}"
+        )
+
+@router.get("/financial-chat-history")
+async def get_financial_chat_history(
+    current_user: User = Depends(get_current_user)
+):
+    """財務チャットの履歴を取得"""
+    try:
+        chat_history = await load_json(f"data/financial_chat_{current_user.id}.json", [])
+        
+        # 最新10件のみ取得
+        recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+        
+        # フロントエンドが期待する形式に変換
+        formatted_history = []
+        for idx, msg in enumerate(recent_history):
+            formatted_msg = {
+                "id": str(hash(f"{msg.get('timestamp', '')}{msg.get('user_message', '')}")),
+                "user_message": msg.get("user_message", ""),
+                "ai_response": msg.get("ai_response", ""),
+                "timestamp": msg.get("timestamp", ""),
+                "has_context": msg.get("context_available", {}).get("has_strategy", False) or 
+                              msg.get("context_available", {}).get("has_lifeplan", False)
+            }
+            formatted_history.append(formatted_msg)
+        
+        return JSONResponse(
+            content={
+                "success": True,
+                "history": formatted_history,
+                "total_count": len(chat_history)
+            },
+            status_code=200
+        )
+        
+    except Exception as e:
+        print(f"チャット履歴取得エラー: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"チャット履歴の取得中にエラーが発生しました: {str(e)}"
+        )
             

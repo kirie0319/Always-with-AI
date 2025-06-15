@@ -1963,4 +1963,60 @@ async def get_financial_chat_history(
             status_code=500,
             detail=f"チャット履歴の取得中にエラーが発生しました: {str(e)}"
         )
+
+@router.post("/clear-financial-data")
+async def clear_financial_data(
+    current_user: User = Depends(get_current_user)
+):
+    """財務関連のすべてのデータをクリア"""
+    try:
+        user_id = current_user.id
+        
+        # クリアするファイルのリスト
+        files_to_clear = [
+            f"data/strategy_{user_id}.json",
+            f"data/lifeplan_{user_id}.json", 
+            f"data/financial_chat_{user_id}.json"
+        ]
+        
+        cleared_files = []
+        
+        for file_path in files_to_clear:
+            try:
+                # ファイルを空のデータで上書き
+                if "strategy_" in file_path:
+                    await save_json(file_path, {})
+                elif "lifeplan_" in file_path:
+                    await save_json(file_path, {})
+                elif "financial_chat_" in file_path:
+                    await save_json(file_path, [])
+                
+                cleared_files.append(file_path)
+                print(f"✅ ファイルクリア成功: {file_path}")
+                
+            except Exception as file_error:
+                print(f"⚠️ ファイルクリア失敗: {file_path} - {file_error}")
+        
+        print(f"🗑️ 財務データクリア完了 - ユーザー: {current_user.username}")
+        print(f"📁 クリア済みファイル: {len(cleared_files)}件")
+        
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "財務データがクリアされました",
+                "cleared_files": len(cleared_files),
+                "timestamp": datetime.now().isoformat()
+            },
+            status_code=200
+        )
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"財務データクリアエラー: {e}")
+        print(error_details)
+        raise HTTPException(
+            status_code=500,
+            detail=f"財務データのクリア中にエラーが発生しました: {str(e)}"
+        )
             

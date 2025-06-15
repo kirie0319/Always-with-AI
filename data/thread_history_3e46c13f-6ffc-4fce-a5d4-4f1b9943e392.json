@@ -1,17 +1,1 @@
-[
-  {
-    "role": "user",
-    "type": "Greeting",
-    "content": "The user greeted the assistant with a misspelled version of \"こんにちは\" (hello), which appears to be an attempt at initiating a conversation.",
-    "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
-    "timestamp": "2025-06-13T20:03:02.745564"
-  },
-  {
-    "role": "assistant",
-    "type": "Offer",
-    "content": "The assistant is offering help and inviting the user to ask questions or request assistance, indicating willingness to assist in any way needed.",
-    "user_id": "3e46c13f-6ffc-4fce-a5d4-4f1b9943e392",
-    "id": "9a285e00-c698-49a5-8ef9-7978a48da907",
-    "timestamp": "2025-06-13T20:03:09.280262"
-  }
-]
+[]
